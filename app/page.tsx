@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 
 // ── 타입 ──────────────────────────────────────
 interface Todo {
-  ID: string; 제목: string; 카테고리: string; 우선순위: string;
-  상태: string; 마감일: string; 메모: string; 생성일: string;
+  ID: string; 프로젝트ID: string; 제목: string; 상태: string; 우선순위: string;
+  마감일: string; 메모: string; 생성일: string;
 }
 interface Memo {
   ID: string; 제목: string; 내용: string; 태그: string; 생성일: string; 수정일: string;
