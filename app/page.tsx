@@ -255,7 +255,7 @@ export default function Home() {
                   const projIdx = projects.findIndex(p => p.ID === todo.프로젝트ID);
                   const projColor = projIdx >= 0 ? PROJ_COLORS[projIdx % PROJ_COLORS.length] : '#64748B';
                   return (
-                    <div key={todo.ID} style={{ background: '#1E293B', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px', border: `1px solid ${isDone ? '#1E293B' : '#334155'}`, opacity: isDone ? 0.6 : 1 }}>
+                    <div key={todo.ID} style={{ background: '#1E293B', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px', border: `1px solid ${isDone ? '#1E293B' : todo.상태 === '진행중' ? '#3B82F6' : '#334155'}`, opacity: isDone ? 0.6 : 1, boxShadow: todo.상태 === '진행중' ? '0 0 0 1px #3B82F630' : 'none' }}>
                       {/* 상태 드롭다운 */}
                       <select
                         value={todo.상태}
