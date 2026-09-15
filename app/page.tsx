@@ -394,8 +394,9 @@ export default function Home() {
                 const monthEnd = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
 
                 // 트랙 배정 (겹치는 프로젝트는 다른 트랙)
-                const validProjs = projects.filter(p => p.시작일 && p.목표일 && p.시작일 <= monthEnd && p.목표일 >= monthStart)
-                  .map(p => ({ ...p, colorIndex: projects.findIndex(x => x.ID === p.ID) }));
+                const validProjs = projects
+                  .map(p => ({ ...p, 시작일: (p.시작일||'').replace(/^'/,''), 목표일: (p.목표일||'').replace(/^'/,''), colorIndex: projects.findIndex(x => x.ID === p.ID) }))
+                  .filter(p => p.시작일 && p.목표일 && p.시작일 <= monthEnd && p.목표일 >= monthStart);
                 const sorted = [...validProjs].sort((a,b) => a.시작일.localeCompare(b.시작일));
                 const tracks: string[][] = [];
                 const trackedProjs = sorted.map(proj => {
@@ -514,7 +515,7 @@ export default function Home() {
                   const pct = parseInt(proj.진행률) || 0;
                   const color = PROJ_COLORS[i % PROJ_COLORS.length];
                   return (
-                    <div key={proj.ID} onClick={() => { setSelectedProjId(proj.ID); setTab('task'); }} style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: `1px solid ${color}40`, cursor: 'pointer', transition: 'border-color 0.15s' }}>
+                    <div key={proj.ID} onClick={() => { setSelectedProjId(proj.ID); setTab('task'); }} style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: `1px solid ${color}40`, cursor: 'pointer', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                           <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color, flexShrink: 0 }} />
@@ -523,6 +524,7 @@ export default function Home() {
                         <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: `${statusColor[proj.상태] || '#94A3B8'}20`, color: statusColor[proj.상태] || '#94A3B8', whiteSpace: 'nowrap', flexShrink: 0, marginTop: '2px' }}>{proj.상태}</span>
                       </div>
                       {proj.설명 && <p style={{ fontSize: '12px', color: '#94A3B8', margin: '0 0 12px' }}>{proj.설명}</p>}
+                      <div style={{ flex: 1 }} />
                       <div style={{ marginBottom: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                           <span style={{ fontSize: '11px', color: '#64748B' }}>진행률</span>
