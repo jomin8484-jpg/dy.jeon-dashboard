@@ -36,6 +36,10 @@ export default function Home() {
   // 메모 선택
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
 
+  // 프로젝트 달력
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
+  const [calMonth, setCalMonth] = useState(new Date().getMonth());
+
   // 로그인 유지
   useEffect(() => {
     if (sessionStorage.getItem('pd_auth') === 'true') setAuth(true);
@@ -258,8 +262,6 @@ export default function Home() {
         {tab === 'project' && (() => {
           const PROJ_COLORS = ['#3B82F6','#22C55E','#F59E0B','#EF4444','#A855F7','#06B6D4','#F97316'];
           const calNow = new Date();
-          const [calYear, setCalYear] = useState(calNow.getFullYear());
-          const [calMonth, setCalMonth] = useState(calNow.getMonth());
           const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
           const firstDay = new Date(calYear, calMonth, 1).getDay();
           const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
