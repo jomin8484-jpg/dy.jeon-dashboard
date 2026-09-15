@@ -276,42 +276,105 @@ export default function Home() {
                 <button onClick={openAdd} style={{ padding: '8px 16px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 추가</button>
               </div>
 
-              {/* 달력 */}
-              <div style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: '1px solid #334155', marginBottom: '16px', overflow: 'hidden' }}>
+              {/* 달력 — 주간 바 형태 */}
+              <div style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: '1px solid #334155', marginBottom: '16px' }}>
+                {/* 헤더 */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y-1); } else setCalMonth(m => m-1); }}
+                  <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear((y: number) => y-1); } else setCalMonth((m: number) => m-1); }}
                     style={{ background: '#334155', border: 'none', borderRadius: '6px', color: '#F1F5F9', width: '28px', height: '28px', cursor: 'pointer', fontSize: '14px' }}>‹</button>
                   <span style={{ fontSize: '14px', fontWeight: 600, color: '#F1F5F9' }}>{calYear}년 {calMonth+1}월</span>
-                  <button onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y+1); } else setCalMonth(m => m+1); }}
+                  <button onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear((y: number) => y+1); } else setCalMonth((m: number) => m+1); }}
                     style={{ background: '#334155', border: 'none', borderRadius: '6px', color: '#F1F5F9', width: '28px', height: '28px', cursor: 'pointer', fontSize: '14px' }}>›</button>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '4px' }}>
+
+                {/* 요일 헤더 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', marginBottom: '2px' }}>
                   {['일','월','화','수','목','금','토'].map((d, i) => (
                     <div key={d} style={{ textAlign: 'center', fontSize: '11px', color: i===0 ? '#EF4444' : i===6 ? '#60A5FA' : '#64748B', padding: '4px 0', fontWeight: 500 }}>{d}</div>
                   ))}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '2px' }}>
+
+                {/* 날짜 행 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '1px', marginBottom: '6px' }}>
                   {Array.from({ length: totalCells }, (_, i) => {
                     const day = i - firstDay + 1;
                     const isValid = day >= 1 && day <= daysInMonth;
                     const isToday = isValid && new Date(calYear, calMonth, day).toDateString() === calNow.toDateString();
-                    const projs = isValid ? getProjectsForDate(day) : [];
                     const dow = i % 7;
                     return (
-                      <div key={i} style={{ minHeight: '58px', padding: '4px', borderRadius: '6px', background: isToday ? '#1E3A5F' : '#0F172A', border: `1px solid ${isToday ? '#3B82F6' : '#1E293B'}` }}>
+                      <div key={i} style={{ height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', background: isToday ? '#1E3A5F' : 'transparent', border: isToday ? '1px solid #3B82F6' : '1px solid transparent' }}>
                         {isValid && (
-                          <>
-                            <div style={{ fontSize: '11px', fontWeight: isToday ? 700 : 400, color: isToday ? '#60A5FA' : dow===0 ? '#EF4444' : dow===6 ? '#60A5FA' : '#94A3B8', marginBottom: '2px' }}>{day}</div>
-                            {projs.slice(0,2).map((p, pi) => (
-                              <div key={pi} style={{ fontSize: '9px', background: PROJ_COLORS[projects.indexOf(p) % PROJ_COLORS.length]+'30', color: PROJ_COLORS[projects.indexOf(p) % PROJ_COLORS.length], borderRadius: '3px', padding: '1px 4px', marginBottom: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.프로젝트명}</div>
-                            ))}
-                            {projs.length > 2 && <div style={{ fontSize: '9px', color: '#64748B' }}>+{projs.length-2}</div>}
-                          </>
+                          <span style={{ fontSize: '11px', fontWeight: isToday ? 700 : 400, color: isToday ? '#60A5FA' : dow===0 ? '#EF4444' : dow===6 ? '#60A5FA' : '#94A3B8' }}>{day}</span>
                         )}
                       </div>
                     );
                   })}
                 </div>
+
+                {/* 프로젝트 바 — 각 프로젝트마다 한 줄 */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {projects.map((proj, pi) => {
+                    const color = PROJ_COLORS[pi % PROJ_COLORS.length];
+                    // 이 달의 시작/끝 계산
+                    const monthStart = `${calYear}-${String(calMonth+1).padStart(2,'0')}-01`;
+                    const monthEnd = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
+                    const projStart = proj.시작일 || '';
+                    const projEnd = proj.목표일 || '';
+                    if (!projStart || !projEnd) return null;
+                    if (projEnd < monthStart || projStart > monthEnd) return null;
+
+                    // 이 달에서의 시작일/종료일 (1-based)
+                    const startDay = projStart < monthStart ? 1 : parseInt(projStart.slice(8));
+                    const endDay = projEnd > monthEnd ? daysInMonth : parseInt(projEnd.slice(8));
+
+                    // 셀 인덱스 (firstDay 오프셋 포함)
+                    const startCell = firstDay + startDay - 1;
+                    const endCell = firstDay + endDay - 1;
+
+                    // 주(row)별로 바 분할
+                    const bars: { startCell: number; endCell: number }[] = [];
+                    let cur = startCell;
+                    while (cur <= endCell) {
+                      const rowEnd = Math.min(Math.floor(cur / 7) * 7 + 6, endCell);
+                      bars.push({ startCell: cur, endCell: rowEnd });
+                      cur = rowEnd + 1;
+                      if (cur % 7 !== 0) cur = Math.floor(cur / 7) * 7 + 7;
+                    }
+
+                    return (
+                      <div key={proj.ID} style={{ position: 'relative', height: '20px' }}>
+                        {/* 배경 그리드 */}
+                        <div style={{ position: 'absolute', inset: 0, display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}>
+                          {Array.from({ length: 7 }, (_, i) => <div key={i} />)}
+                        </div>
+                        {/* 실제 달력 그리드 기준으로 바 렌더 */}
+                        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${totalCells}, minmax(0, 1fr))`, position: 'absolute', inset: 0, gap: '1px' }}>
+                          {bars.map((bar, bi) => {
+                            const colStart = bar.startCell + 1;
+                            const colSpan = bar.endCell - bar.startCell + 1;
+                            const isFirst = bar.startCell === startCell;
+                            const isLast = bar.endCell === endCell;
+                            return (
+                              <div key={bi} style={{
+                                gridColumn: `${colStart} / span ${colSpan}`,
+                                height: '20px',
+                                background: color + 'CC',
+                                borderRadius: `${isFirst ? '4px' : '0'} ${isLast ? '4px' : '0'} ${isLast ? '4px' : '0'} ${isFirst ? '4px' : '0'}`,
+                                display: 'flex', alignItems: 'center',
+                                paddingLeft: isFirst ? '6px' : '2px',
+                                overflow: 'hidden',
+                              }}>
+                                {isFirst && <span style={{ fontSize: '10px', color: '#fff', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{proj.프로젝트명}</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 범례 */}
                 {projects.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #334155' }}>
                     {projects.map((p, i) => (
