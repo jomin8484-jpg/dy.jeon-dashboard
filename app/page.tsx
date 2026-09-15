@@ -277,7 +277,7 @@ export default function Home() {
               </div>
 
               {/* 달력 */}
-              <div style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: '1px solid #334155', marginBottom: '16px' }}>
+              <div style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: '1px solid #334155', marginBottom: '16px', overflow: 'hidden' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                   <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y-1); } else setCalMonth(m => m-1); }}
                     style={{ background: '#334155', border: 'none', borderRadius: '6px', color: '#F1F5F9', width: '28px', height: '28px', cursor: 'pointer', fontSize: '14px' }}>‹</button>
@@ -290,7 +290,7 @@ export default function Home() {
                     <div key={d} style={{ textAlign: 'center', fontSize: '11px', color: i===0 ? '#EF4444' : i===6 ? '#60A5FA' : '#64748B', padding: '4px 0', fontWeight: 500 }}>{d}</div>
                   ))}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '2px' }}>
                   {Array.from({ length: totalCells }, (_, i) => {
                     const day = i - firstDay + 1;
                     const isValid = day >= 1 && day <= daysInMonth;
