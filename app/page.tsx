@@ -1,69 +1,368 @@
-import Image from "next/image";
+'use client';
+import { useState, useEffect } from 'react';
+
+// ── 타입 ──────────────────────────────────────
+interface Todo {
+  ID: string; 제목: string; 카테고리: string; 우선순위: string;
+  상태: string; 마감일: string; 메모: string; 생성일: string;
+}
+interface Memo {
+  ID: string; 제목: string; 내용: string; 태그: string; 생성일: string; 수정일: string;
+}
+interface Project {
+  ID: string; 프로젝트명: string; 설명: string; 상태: string;
+  진행률: string; 시작일: string; 목표일: string; 메모: string;
+}
+
+const PASSWORD = 'selvatico2026';
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+  const [auth, setAuth] = useState(false);
+  const [pw, setPw] = useState('');
+  const [pwError, setPwError] = useState(false);
+  const [tab, setTab] = useState<'todo' | 'memo' | 'project'>('todo');
+
+  // 데이터
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [memos, setMemos] = useState<Memo[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // 모달
+  const [showModal, setShowModal] = useState(false);
+  const [editItem, setEditItem] = useState<any>(null);
+  const [form, setForm] = useState<any>({});
+
+  // 메모 선택
+  const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
+
+  // 로그인 유지
+  useEffect(() => {
+    if (sessionStorage.getItem('pd_auth') === 'true') setAuth(true);
+  }, []);
+
+  const handleLogin = () => {
+    if (pw === PASSWORD) {
+      setAuth(true);
+      sessionStorage.setItem('pd_auth', 'true');
+    } else {
+      setPwError(true);
+      setTimeout(() => setPwError(false), 2000);
+    }
+  };
+
+  // 데이터 로드
+  useEffect(() => {
+    if (!auth) return;
+    setLoading(true);
+    Promise.all([
+      fetch('/api/todo').then(r => r.json()),
+      fetch('/api/memo').then(r => r.json()),
+      fetch('/api/project').then(r => r.json()),
+    ]).then(([t, m, p]) => {
+      setTodos(Array.isArray(t) ? t.filter((x: Todo) => x.ID) : []);
+      setMemos(Array.isArray(m) ? m.filter((x: Memo) => x.ID) : []);
+      setProjects(Array.isArray(p) ? p.filter((x: Project) => x.ID) : []);
+    }).finally(() => setLoading(false));
+  }, [auth]);
+
+  const nextId = (list: any[]) => {
+    if (list.length === 0) return '1';
+    return String(Math.max(...list.map(x => Number(x.ID) || 0)) + 1);
+  };
+
+  const openAdd = () => {
+    setEditItem(null);
+    if (tab === 'todo') setForm({ 제목: '', 카테고리: '업무', 우선순위: '보통', 상태: '대기', 마감일: '', 메모: '' });
+    if (tab === 'memo') setForm({ 제목: '', 내용: '', 태그: '' });
+    if (tab === 'project') setForm({ 프로젝트명: '', 설명: '', 상태: '진행중', 진행률: '0', 시작일: '', 목표일: '', 메모: '' });
+    setShowModal(true);
+  };
+
+  const openEdit = (item: any) => {
+    setEditItem(item);
+    setForm({ ...item });
+    setShowModal(true);
+  };
+
+  const handleSave = async () => {
+    const url = tab === 'todo' ? '/api/todo' : tab === 'memo' ? '/api/memo' : '/api/project';
+    const method = editItem ? 'PUT' : 'POST';
+    const body = editItem ? { ...form, ID: editItem.ID } : { ...form, ID: nextId(tab === 'todo' ? todos : tab === 'memo' ? memos : projects) };
+    await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    setShowModal(false);
+    // 새로고침
+    const res = await fetch(url).then(r => r.json());
+    if (tab === 'todo') setTodos(Array.isArray(res) ? res.filter((x: Todo) => x.ID) : []);
+    if (tab === 'memo') setMemos(Array.isArray(res) ? res.filter((x: Memo) => x.ID) : []);
+    if (tab === 'project') setProjects(Array.isArray(res) ? res.filter((x: Project) => x.ID) : []);
+  };
+
+  const handleDelete = async (item: any) => {
+    if (!confirm('삭제할까요?')) return;
+    const url = tab === 'todo' ? '/api/todo' : tab === 'memo' ? '/api/memo' : '/api/project';
+    await fetch(url, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ID: item.ID }) });
+    const res = await fetch(url).then(r => r.json());
+    if (tab === 'todo') setTodos(Array.isArray(res) ? res.filter((x: Todo) => x.ID) : []);
+    if (tab === 'memo') { setMemos(Array.isArray(res) ? res.filter((x: Memo) => x.ID) : []); setSelectedMemo(null); }
+    if (tab === 'project') setProjects(Array.isArray(res) ? res.filter((x: Project) => x.ID) : []);
+  };
+
+  const statusColor: Record<string, string> = {
+    '대기': '#94A3B8', '진행중': '#3B82F6', '완료': '#22C55E', '보류': '#F59E0B',
+  };
+  const priorityColor: Record<string, string> = { '높음': '#EF4444', '보통': '#3B82F6', '낮음': '#94A3B8' };
+  const progressColor = (p: number) => p >= 80 ? '#22C55E' : p >= 40 ? '#3B82F6' : '#94A3B8';
+
+  // ── 로그인 화면 ──────────────────────────────
+  if (!auth) return (
+    <div style={{ minHeight: '100vh', background: '#0F172A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>
+      <div style={{ background: '#1E293B', borderRadius: '16px', padding: '48px 40px', width: '340px', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
+        <p style={{ fontSize: '11px', color: '#64748B', letterSpacing: '0.15em', margin: '0 0 8px' }}>PERSONAL WORKSPACE</p>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#F1F5F9', margin: '0 0 32px' }}>전동열</h1>
+        <input
+          type="password"
+          placeholder="비밀번호 입력"
+          value={pw}
+          onChange={e => setPw(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleLogin()}
+          style={{ width: '100%', padding: '12px 16px', background: '#0F172A', border: `1px solid ${pwError ? '#EF4444' : '#334155'}`, borderRadius: '8px', color: '#F1F5F9', fontSize: '14px', outline: 'none', boxSizing: 'border-box', marginBottom: '8px' }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+        {pwError && <p style={{ color: '#EF4444', fontSize: '12px', margin: '0 0 12px' }}>비밀번호가 틀렸어요.</p>}
+        <button
+          onClick={handleLogin}
+          style={{ width: '100%', padding: '12px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer', marginTop: '8px' }}
+        >
+          로그인
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── 메인 대시보드 ─────────────────────────────
+  return (
+    <div style={{ minHeight: '100vh', background: '#0F172A', fontFamily: 'Arial, sans-serif', color: '#F1F5F9' }}>
+      {/* 헤더 */}
+      <div style={{ background: '#1E293B', borderBottom: '1px solid #334155', padding: '0 24px' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '16px', fontWeight: 700, color: '#F1F5F9' }}>전동열</span>
+            <span style={{ fontSize: '12px', color: '#64748B' }}>Workspace</span>
+          </div>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {(['todo', 'memo', 'project'] as const).map(t => (
+              <button key={t} onClick={() => setTab(t)} style={{
+                padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500,
+                background: tab === t ? '#3B82F6' : 'transparent',
+                color: tab === t ? '#fff' : '#94A3B8',
+              }}>
+                {t === 'todo' ? '✅ 할일' : t === 'memo' ? '📝 메모' : '🚀 프로젝트'}
+              </button>
+            ))}
+          </div>
+          <button onClick={() => { sessionStorage.removeItem('pd_auth'); setAuth(false); }}
+            style={{ background: 'none', border: 'none', color: '#64748B', fontSize: '12px', cursor: 'pointer' }}>로그아웃</button>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px' }}>
+        {loading && <p style={{ color: '#64748B', textAlign: 'center' }}>불러오는 중...</p>}
+
+        {/* ── 할일 탭 ── */}
+        {tab === 'todo' && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>할일</h2>
+                <p style={{ fontSize: '12px', color: '#64748B', margin: 0 }}>
+                  전체 {todos.length}개 · 완료 {todos.filter(t => t.상태 === '완료').length}개 · 진행중 {todos.filter(t => t.상태 === '진행중').length}개
+                </p>
+              </div>
+              <button onClick={openAdd} style={{ padding: '8px 16px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 추가</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {todos.length === 0 && <p style={{ color: '#64748B', textAlign: 'center', padding: '40px 0' }}>할일을 추가해보세요</p>}
+              {todos.map(todo => (
+                <div key={todo.ID} style={{ background: '#1E293B', borderRadius: '10px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid #334155' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: statusColor[todo.상태] || '#94A3B8', flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 500, color: todo.상태 === '완료' ? '#64748B' : '#F1F5F9', textDecoration: todo.상태 === '완료' ? 'line-through' : 'none' }}>{todo.제목}</span>
+                      <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '10px', background: `${priorityColor[todo.우선순위]}20`, color: priorityColor[todo.우선순위] || '#94A3B8' }}>{todo.우선순위}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: '#64748B' }}>
+                      <span>{todo.카테고리}</span>
+                      {todo.마감일 && <span>· D-{Math.ceil((new Date(todo.마감일).getTime() - Date.now()) / 86400000)}</span>}
+                      {todo.메모 && <span>· {todo.메모}</span>}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', background: `${statusColor[todo.상태]}20`, color: statusColor[todo.상태] || '#94A3B8' }}>{todo.상태}</span>
+                    <button onClick={() => openEdit(todo)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px', padding: '0 4px' }}>✏️</button>
+                    <button onClick={() => handleDelete(todo)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px', padding: '0 4px' }}>🗑️</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* ── 메모 탭 ── */}
+        {tab === 'memo' && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>메모</h2>
+              <button onClick={openAdd} style={{ padding: '8px 16px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 추가</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: selectedMemo ? '280px 1fr' : '1fr', gap: '16px' }}>
+              {/* 목록 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {memos.length === 0 && <p style={{ color: '#64748B', textAlign: 'center', padding: '40px 0' }}>메모를 추가해보세요</p>}
+                {memos.map(memo => (
+                  <div key={memo.ID} onClick={() => setSelectedMemo(memo)} style={{
+                    background: selectedMemo?.ID === memo.ID ? '#1E40AF' : '#1E293B',
+                    borderRadius: '10px', padding: '12px 14px', cursor: 'pointer',
+                    border: `1px solid ${selectedMemo?.ID === memo.ID ? '#3B82F6' : '#334155'}`,
+                  }}>
+                    <p style={{ fontSize: '14px', fontWeight: 500, margin: '0 0 4px', color: '#F1F5F9' }}>{memo.제목}</p>
+                    <p style={{ fontSize: '11px', color: '#94A3B8', margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memo.내용}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '10px', color: '#64748B' }}>{memo.수정일}</span>
+                      {memo.태그 && <span style={{ fontSize: '10px', color: '#3B82F6' }}>#{memo.태그}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* 상세 */}
+              {selectedMemo && (
+                <div style={{ background: '#1E293B', borderRadius: '12px', padding: '20px', border: '1px solid #334155' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                    <div>
+                      <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>{selectedMemo.제목}</h3>
+                      <span style={{ fontSize: '11px', color: '#64748B' }}>{selectedMemo.수정일} 수정</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => openEdit(selectedMemo)} style={{ padding: '6px 12px', background: '#334155', border: 'none', borderRadius: '6px', color: '#F1F5F9', fontSize: '12px', cursor: 'pointer' }}>수정</button>
+                      <button onClick={() => handleDelete(selectedMemo)} style={{ padding: '6px 12px', background: '#7F1D1D', border: 'none', borderRadius: '6px', color: '#FCA5A5', fontSize: '12px', cursor: 'pointer' }}>삭제</button>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: '14px', color: '#CBD5E1', lineHeight: '1.8', whiteSpace: 'pre-wrap', margin: 0 }}>{selectedMemo.내용}</p>
+                  {selectedMemo.태그 && <p style={{ marginTop: '16px', fontSize: '12px', color: '#3B82F6' }}>#{selectedMemo.태그}</p>}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ── 프로젝트 탭 ── */}
+        {tab === 'project' && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>프로젝트</h2>
+              <button onClick={openAdd} style={{ padding: '8px 16px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 추가</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '12px' }}>
+              {projects.length === 0 && <p style={{ color: '#64748B', textAlign: 'center', padding: '40px 0' }}>프로젝트를 추가해보세요</p>}
+              {projects.map(proj => {
+                const pct = parseInt(proj.진행률) || 0;
+                return (
+                  <div key={proj.ID} style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: '1px solid #334155' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                      <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>{proj.프로젝트명}</h3>
+                      <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: `${statusColor[proj.상태] || '#94A3B8'}20`, color: statusColor[proj.상태] || '#94A3B8' }}>{proj.상태}</span>
+                    </div>
+                    {proj.설명 && <p style={{ fontSize: '12px', color: '#94A3B8', margin: '0 0 12px' }}>{proj.설명}</p>}
+                    {/* 진행률 바 */}
+                    <div style={{ marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '11px', color: '#64748B' }}>진행률</span>
+                        <span style={{ fontSize: '11px', color: progressColor(pct), fontWeight: 600 }}>{pct}%</span>
+                      </div>
+                      <div style={{ height: '4px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: progressColor(pct), borderRadius: '2px', transition: 'width 0.3s' }} />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '11px', color: '#64748B' }}>
+                        {proj.시작일} ~ {proj.목표일}
+                      </span>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button onClick={() => openEdit(proj)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px' }}>✏️</button>
+                        <button onClick={() => handleDelete(proj)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px' }}>🗑️</button>
+                      </div>
+                    </div>
+                    {proj.메모 && <p style={{ fontSize: '11px', color: '#64748B', margin: '8px 0 0', borderTop: '1px solid #334155', paddingTop: '8px' }}>{proj.메모}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ── 모달 ── */}
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#1E293B', borderRadius: '16px', padding: '28px', width: '440px', maxWidth: '90vw', border: '1px solid #334155' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 20px' }}>
+              {editItem ? '수정' : '추가'} — {tab === 'todo' ? '할일' : tab === 'memo' ? '메모' : '프로젝트'}
+            </h3>
+
+            {tab === 'todo' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <input placeholder="제목" value={form.제목 || ''} onChange={e => setForm({ ...form, 제목: e.target.value })} style={inputStyle} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <select value={form.카테고리 || '업무'} onChange={e => setForm({ ...form, 카테고리: e.target.value })} style={inputStyle}>
+                    {['업무', '개인', '미팅', '기타'].map(v => <option key={v}>{v}</option>)}
+                  </select>
+                  <select value={form.우선순위 || '보통'} onChange={e => setForm({ ...form, 우선순위: e.target.value })} style={inputStyle}>
+                    {['높음', '보통', '낮음'].map(v => <option key={v}>{v}</option>)}
+                  </select>
+                  <select value={form.상태 || '대기'} onChange={e => setForm({ ...form, 상태: e.target.value })} style={inputStyle}>
+                    {['대기', '진행중', '완료', '보류'].map(v => <option key={v}>{v}</option>)}
+                  </select>
+                  <input type="date" value={form.마감일 || ''} onChange={e => setForm({ ...form, 마감일: e.target.value })} style={inputStyle} />
+                </div>
+                <input placeholder="메모 (선택)" value={form.메모 || ''} onChange={e => setForm({ ...form, 메모: e.target.value })} style={inputStyle} />
+              </div>
+            )}
+
+            {tab === 'memo' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <input placeholder="제목" value={form.제목 || ''} onChange={e => setForm({ ...form, 제목: e.target.value })} style={inputStyle} />
+                <textarea placeholder="내용" value={form.내용 || ''} onChange={e => setForm({ ...form, 내용: e.target.value })} style={{ ...inputStyle, height: '140px', resize: 'vertical' }} />
+                <input placeholder="태그 (선택)" value={form.태그 || ''} onChange={e => setForm({ ...form, 태그: e.target.value })} style={inputStyle} />
+              </div>
+            )}
+
+            {tab === 'project' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <input placeholder="프로젝트명" value={form.프로젝트명 || ''} onChange={e => setForm({ ...form, 프로젝트명: e.target.value })} style={inputStyle} />
+                <input placeholder="설명" value={form.설명 || ''} onChange={e => setForm({ ...form, 설명: e.target.value })} style={inputStyle} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <select value={form.상태 || '진행중'} onChange={e => setForm({ ...form, 상태: e.target.value })} style={inputStyle}>
+                    {['진행중', '완료', '보류', '대기'].map(v => <option key={v}>{v}</option>)}
+                  </select>
+                  <input placeholder="진행률 (0~100)" value={form.진행률 || '0'} onChange={e => setForm({ ...form, 진행률: e.target.value })} style={inputStyle} />
+                  <input type="date" value={form.시작일 || ''} onChange={e => setForm({ ...form, 시작일: e.target.value })} style={inputStyle} />
+                  <input type="date" value={form.목표일 || ''} onChange={e => setForm({ ...form, 목표일: e.target.value })} style={inputStyle} />
+                </div>
+                <textarea placeholder="메모 (선택)" value={form.메모 || ''} onChange={e => setForm({ ...form, 메모: e.target.value })} style={{ ...inputStyle, height: '80px', resize: 'vertical' }} />
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+              <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', background: '#334155', border: 'none', borderRadius: '8px', color: '#94A3B8', fontSize: '13px', cursor: 'pointer' }}>취소</button>
+              <button onClick={handleSave} style={{ flex: 2, padding: '10px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>저장</button>
+            </div>
+          </div>
         </div>
-      </main>
+      )}
     </div>
   );
 }
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 12px', background: '#0F172A', border: '1px solid #334155',
+  borderRadius: '8px', color: '#F1F5F9', fontSize: '13px', outline: 'none', boxSizing: 'border-box',
+};
