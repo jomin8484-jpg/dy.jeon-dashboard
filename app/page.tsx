@@ -66,7 +66,11 @@ export default function Home() {
     ]).then(([t, m, p]) => {
       setTodos(Array.isArray(t) ? t.filter((x: Todo) => x.ID) : []);
       setMemos(Array.isArray(m) ? m.filter((x: Memo) => x.ID) : []);
-      setProjects(Array.isArray(p) ? p.filter((x: Project) => x.ID) : []);
+      setProjects(Array.isArray(p) ? p.filter((x: Project) => x.ID).map((x: Project) => ({
+        ...x,
+        시작일: (x.시작일 || '').replace(/^'/, ''),
+        목표일: (x.목표일 || '').replace(/^'/, ''),
+      })) : []);
     }).finally(() => setLoading(false));
   }, [auth]);
 
