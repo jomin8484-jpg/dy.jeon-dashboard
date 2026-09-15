@@ -180,43 +180,112 @@ export default function Home() {
         {loading && <p style={{ color: '#64748B', textAlign: 'center' }}>불러오는 중...</p>}
 
         {/* ── 할일 탭 ── */}
-        {tab === 'task' && (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div>
-                <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>📌 태스크</h2>
-                <p style={{ fontSize: '12px', color: '#64748B', margin: 0 }}>
-                  전체 {todos.length}개 · 완료 {todos.filter(t => t.상태 === '완료').length}개 · 진행중 {todos.filter(t => t.상태 === '진행중').length}개
-                </p>
-              </div>
-              <button onClick={openAdd} style={{ padding: '8px 16px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 추가</button>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {todos.length === 0 && <p style={{ color: '#64748B', textAlign: 'center', padding: '40px 0' }}>할일을 추가해보세요</p>}
-              {todos.map(todo => (
-                <div key={todo.ID} style={{ background: '#1E293B', borderRadius: '10px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid #334155' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: statusColor[todo.상태] || '#94A3B8', flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 500, color: todo.상태 === '완료' ? '#64748B' : '#F1F5F9', textDecoration: todo.상태 === '완료' ? 'line-through' : 'none' }}>{todo.제목}</span>
-                      <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '10px', background: `${priorityColor[todo.우선순위]}20`, color: priorityColor[todo.우선순위] || '#94A3B8' }}>{todo.우선순위}</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: '#64748B' }}>
-                      <span>{todo.카테고리}</span>
-                      {todo.마감일 && <span>· D-{Math.ceil((new Date(todo.마감일).getTime() - Date.now()) / 86400000)}</span>}
-                      {todo.메모 && <span>· {todo.메모}</span>}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', background: `${statusColor[todo.상태]}20`, color: statusColor[todo.상태] || '#94A3B8' }}>{todo.상태}</span>
-                    <button onClick={() => openEdit(todo)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px', padding: '0 4px' }}>✏️</button>
-                    <button onClick={() => handleDelete(todo)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px', padding: '0 4px' }}>🗑️</button>
-                  </div>
+        {tab === 'task' && (() => {
+          const PROJ_COLORS = ['#3B82F6','#22C55E','#F59E0B','#EF4444','#A855F7','#06B6D4','#F97316'];
+          const selectedProj = selectedProjId ? projects.find(p => p.ID === selectedProjId) : null;
+          const filteredTodos = selectedProjId ? todos.filter(t => t.프로젝트ID === selectedProjId) : todos;
+          const completedCount = filteredTodos.filter(t => t.상태 === '완료').length;
+          const progress = filteredTodos.length > 0 ? Math.round(completedCount / filteredTodos.length * 100) : 0;
+
+          const handleCheck = async (todo: Todo) => {
+            const newStatus = todo.상태 === '완료' ? '대기' : '완료';
+            await fetch('/api/todo', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...todo, 상태: newStatus }),
+            });
+            const res = await fetch('/api/todo').then(r => r.json());
+            const newTodos = Array.isArray(res) ? res.filter((x: Todo) => x.ID) : [];
+            setTodos(newTodos);
+            if (selectedProjId) {
+              const projTodos = newTodos.filter((t: Todo) => t.프로젝트ID === selectedProjId);
+              const done = projTodos.filter((t: Todo) => t.상태 === '완료').length;
+              const newProgress = projTodos.length > 0 ? Math.round(done / projTodos.length * 100) : 0;
+              const proj = projects.find(p => p.ID === selectedProjId);
+              if (proj) {
+                await fetch('/api/project', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ ...proj, 진행률: String(newProgress) }),
+                });
+                const pres = await fetch('/api/project').then(r => r.json());
+                setProjects(Array.isArray(pres) ? pres.filter((x: Project) => x.ID).map((x: Project) => ({ ...x, 시작일: (x.시작일||'').replace(/^'/,''), 목표일: (x.목표일||'').replace(/^'/,'') })) : []);
+              }
+            }
+          };
+
+          return (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div>
+                  <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>📌 태스크</h2>
+                  <p style={{ fontSize: '12px', color: '#64748B', margin: 0 }}>
+                    {filteredTodos.length}개 · 완료 {completedCount}개
+                  </p>
                 </div>
-              ))}
-            </div>
-          </>
-        )}
+                <button onClick={openAdd} style={{ padding: '8px 16px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 추가</button>
+              </div>
+
+              {/* 프로젝트 필터 탭 */}
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                <button onClick={() => setSelectedProjId(null)} style={{ padding: '5px 12px', borderRadius: '16px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 500, background: !selectedProjId ? '#3B82F6' : '#1E293B', color: !selectedProjId ? '#fff' : '#94A3B8' }}>전체</button>
+                {projects.map((p, i) => (
+                  <button key={p.ID} onClick={() => setSelectedProjId(p.ID)} style={{ padding: '5px 12px', borderRadius: '16px', border: `1px solid ${PROJ_COLORS[i % PROJ_COLORS.length]}`, cursor: 'pointer', fontSize: '12px', fontWeight: 500, background: selectedProjId === p.ID ? PROJ_COLORS[i % PROJ_COLORS.length] : 'transparent', color: selectedProjId === p.ID ? '#fff' : PROJ_COLORS[i % PROJ_COLORS.length] }}>{p.프로젝트명}</button>
+                ))}
+              </div>
+
+              {/* 선택된 프로젝트 진행률 */}
+              {selectedProj && (
+                <div style={{ background: '#1E293B', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', border: '1px solid #334155' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#F1F5F9' }}>{selectedProj.프로젝트명}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#3B82F6' }}>{progress}%</span>
+                  </div>
+                  <div style={{ height: '6px', background: '#334155', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${progress}%`, background: '#3B82F6', borderRadius: '3px', transition: 'width 0.3s' }} />
+                  </div>
+                  <p style={{ fontSize: '11px', color: '#64748B', margin: '6px 0 0' }}>{selectedProj.시작일} ~ {selectedProj.목표일}</p>
+                </div>
+              )}
+
+              {/* 체크리스트 */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {filteredTodos.length === 0 && <p style={{ color: '#64748B', textAlign: 'center', padding: '40px 0' }}>태스크를 추가해보세요</p>}
+                {filteredTodos.map(todo => {
+                  const isDone = todo.상태 === '완료';
+                  const projIdx = projects.findIndex(p => p.ID === todo.프로젝트ID);
+                  const projColor = projIdx >= 0 ? PROJ_COLORS[projIdx % PROJ_COLORS.length] : '#64748B';
+                  return (
+                    <div key={todo.ID} style={{ background: '#1E293B', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px', border: `1px solid ${isDone ? '#1E293B' : '#334155'}`, opacity: isDone ? 0.6 : 1 }}>
+                      <div onClick={() => handleCheck(todo)} style={{ width: '20px', height: '20px', borderRadius: '50%', border: `2px solid ${isDone ? '#22C55E' : '#475569'}`, background: isDone ? '#22C55E' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s' }}>
+                        {isDone && <span style={{ color: '#fff', fontSize: '11px', fontWeight: 700 }}>✓</span>}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: 500, color: isDone ? '#64748B' : '#F1F5F9', textDecoration: isDone ? 'line-through' : 'none' }}>{todo.제목}</span>
+                          {!selectedProjId && todo.프로젝트ID && (
+                            <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '8px', background: projColor + '20', color: projColor, flexShrink: 0 }}>
+                              {projects.find(p => p.ID === todo.프로젝트ID)?.프로젝트명 || ''}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
+                          {todo.우선순위 && <span style={{ color: priorityColor[todo.우선순위] || '#64748B' }}>{todo.우선순위}</span>}
+                          {todo.마감일 && <span>· {todo.마감일}</span>}
+                          {todo.메모 && <span>· {todo.메모}</span>}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                        <button onClick={() => openEdit(todo)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px' }}>✏️</button>
+                        <button onClick={() => handleDelete(todo)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px' }}>🗑️</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          );
+        })()}
 
         {/* ── 메모 탭 ── */}
         {tab === 'memo' && (
