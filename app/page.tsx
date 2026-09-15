@@ -313,7 +313,8 @@ export default function Home() {
                 const monthEnd = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
 
                 // 트랙 배정 (겹치는 프로젝트는 다른 트랙)
-                const validProjs = projects.filter(p => p.시작일 && p.목표일 && p.시작일 <= monthEnd && p.목표일 >= monthStart);
+                const validProjs = projects.filter(p => p.시작일 && p.목표일 && p.시작일 <= monthEnd && p.목표일 >= monthStart)
+                  .map(p => ({ ...p, colorIndex: projects.findIndex(x => x.ID === p.ID) }));
                 const sorted = [...validProjs].sort((a,b) => a.시작일.localeCompare(b.시작일));
                 const tracks: string[][] = [];
                 const trackedProjs = sorted.map(proj => {
@@ -378,7 +379,7 @@ export default function Home() {
                             const span = ei - si + 1;
                             const isFirst = proj.시작일 === barStart;
                             const isLast = proj.목표일 === barEnd;
-                            const color = PROJ_COLORS[projects.indexOf(proj) % PROJ_COLORS.length];
+                            const color = PROJ_COLORS[(proj as any).colorIndex % PROJ_COLORS.length];
                             return (
                               <div key={`${proj.ID}-${ri}`} style={{
                                 position: 'absolute',
