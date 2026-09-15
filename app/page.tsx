@@ -187,8 +187,7 @@ export default function Home() {
           const completedCount = filteredTodos.filter(t => t.상태 === '완료').length;
           const progress = filteredTodos.length > 0 ? Math.round(completedCount / filteredTodos.length * 100) : 0;
 
-          const handleCheck = async (todo: Todo) => {
-            const newStatus = todo.상태 === '완료' ? '대기' : '완료';
+          const handleStatusChange = async (todo: Todo, newStatus: string) => {
             await fetch('/api/todo', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -257,9 +256,19 @@ export default function Home() {
                   const projColor = projIdx >= 0 ? PROJ_COLORS[projIdx % PROJ_COLORS.length] : '#64748B';
                   return (
                     <div key={todo.ID} style={{ background: '#1E293B', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px', border: `1px solid ${isDone ? '#1E293B' : '#334155'}`, opacity: isDone ? 0.6 : 1 }}>
-                      <div onClick={() => handleCheck(todo)} style={{ width: '20px', height: '20px', borderRadius: '50%', border: `2px solid ${isDone ? '#22C55E' : '#475569'}`, background: isDone ? '#22C55E' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, transition: 'all 0.2s' }}>
-                        {isDone && <span style={{ color: '#fff', fontSize: '11px', fontWeight: 700 }}>✓</span>}
-                      </div>
+                      {/* 상태 드롭다운 */}
+                      <select
+                        value={todo.상태}
+                        onChange={e => handleStatusChange(todo, e.target.value)}
+                        style={{
+                          padding: '3px 6px', borderRadius: '6px', border: 'none', fontSize: '11px', fontWeight: 500, cursor: 'pointer', outline: 'none', flexShrink: 0,
+                          background: todo.상태 === '완료' ? '#16532430' : todo.상태 === '진행중' ? '#1E3A5F' : '#334155',
+                          color: todo.상태 === '완료' ? '#22C55E' : todo.상태 === '진행중' ? '#60A5FA' : '#94A3B8',
+                          colorScheme: 'dark',
+                        }}
+                      >
+                        {['대기', '진행중', '완료'].map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ fontSize: '14px', fontWeight: 500, color: isDone ? '#64748B' : '#F1F5F9', textDecoration: isDone ? 'line-through' : 'none' }}>{todo.제목}</span>
