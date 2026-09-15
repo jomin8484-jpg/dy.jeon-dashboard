@@ -39,6 +39,7 @@ export default function Home() {
   // 프로젝트 달력
   const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
+  const [hoveredProj, setHoveredProj] = useState<string | null>(null);
 
   // 로그인 유지
   useEffect(() => {
@@ -380,8 +381,13 @@ export default function Home() {
                             const isFirst = proj.시작일 === barStart;
                             const isLast = proj.목표일 === barEnd;
                             const color = PROJ_COLORS[(proj as any).colorIndex % PROJ_COLORS.length];
+                            const isHovered = hoveredProj === proj.ID;
+                            const isDimmed = hoveredProj !== null && !isHovered;
                             return (
-                              <div key={`${proj.ID}-${ri}`} style={{
+                              <div key={`${proj.ID}-${ri}`}
+                                onMouseEnter={() => setHoveredProj(proj.ID)}
+                                onMouseLeave={() => setHoveredProj(null)}
+                                style={{
                                 position: 'absolute',
                                 top: `${TRACK_TOP + proj.track * (TRACK_H + TRACK_GAP)}px`,
                                 left: `calc(${si * (100/7)}% + 2px)`,
@@ -394,7 +400,11 @@ export default function Home() {
                                 borderRight: isLast ? `2px solid ${color}` : 'none',
                                 borderRadius: isFirst && isLast ? '4px' : isFirst ? '4px 0 0 4px' : isLast ? '0 4px 4px 0' : '0',
                                 display: 'flex', alignItems: 'center', paddingLeft: isFirst ? '6px' : '2px',
-                                overflow: 'hidden', boxSizing: 'border-box',
+                                overflow: 'hidden', boxSizing: 'border-box', cursor: 'pointer',
+                                opacity: isDimmed ? 0.2 : 1,
+                                filter: isHovered ? 'brightness(1.2)' : 'none',
+                                transition: 'opacity 0.15s, filter 0.15s',
+                                zIndex: isHovered ? 10 : 1,
                               }}>
                                 {isFirst && <span style={{ fontSize: '10px', fontWeight: 500, color, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{proj.프로젝트명}</span>}
                               </div>
