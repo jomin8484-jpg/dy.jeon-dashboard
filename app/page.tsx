@@ -365,4 +365,5 @@ export default function Home() {
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', background: '#0F172A', border: '1px solid #334155',
   borderRadius: '8px', color: '#F1F5F9', fontSize: '13px', outline: 'none', boxSizing: 'border-box',
+  colorScheme: 'dark',
 };
