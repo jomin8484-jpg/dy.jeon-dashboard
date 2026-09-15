@@ -184,7 +184,7 @@ export default function Home() {
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div>
-                <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>할일</h2>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>📌 태스크</h2>
                 <p style={{ fontSize: '12px', color: '#64748B', margin: 0 }}>
                   전체 {todos.length}개 · 완료 {todos.filter(t => t.상태 === '완료').length}개 · 진행중 {todos.filter(t => t.상태 === '진행중').length}개
                 </p>
@@ -222,7 +222,7 @@ export default function Home() {
         {tab === 'memo' && (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>메모</h2>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>📝 메모</h2>
               <button onClick={openAdd} style={{ padding: '8px 16px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 추가</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: selectedMemo ? '280px 1fr' : '1fr', gap: '16px' }}>
@@ -279,7 +279,7 @@ export default function Home() {
           return (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>프로젝트</h2>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>📋 업무보드</h2>
                 <button onClick={openAdd} style={{ padding: '8px 16px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 추가</button>
               </div>
 
@@ -436,11 +436,11 @@ export default function Home() {
                   const pct = parseInt(proj.진행률) || 0;
                   const color = PROJ_COLORS[i % PROJ_COLORS.length];
                   return (
-                    <div key={proj.ID} style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: `1px solid ${color}40` }}>
+                    <div key={proj.ID} onClick={() => { setSelectedProjId(proj.ID); setTab('task'); }} style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: `1px solid ${color}40`, cursor: 'pointer', transition: 'border-color 0.15s' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color, flexShrink: 0 }} />
-                          <h3 onClick={() => { setSelectedProjId(proj.ID); setTab('task'); }} style={{ fontSize: '15px', fontWeight: 600, margin: 0, cursor: 'pointer' }}>{proj.프로젝트명} →</h3>
+                          <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>{proj.프로젝트명}</h3>
                         </div>
                         <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: `${statusColor[proj.상태] || '#94A3B8'}20`, color: statusColor[proj.상태] || '#94A3B8' }}>{proj.상태}</span>
                       </div>
