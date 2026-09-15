@@ -515,12 +515,12 @@ export default function Home() {
                   const color = PROJ_COLORS[i % PROJ_COLORS.length];
                   return (
                     <div key={proj.ID} onClick={() => { setSelectedProjId(proj.ID); setTab('task'); }} style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: `1px solid ${color}40`, cursor: 'pointer', transition: 'border-color 0.15s' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                           <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color, flexShrink: 0 }} />
-                          <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>{proj.프로젝트명}</h3>
+                          <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0, wordBreak: 'keep-all' }}>{proj.프로젝트명}</h3>
                         </div>
-                        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: `${statusColor[proj.상태] || '#94A3B8'}20`, color: statusColor[proj.상태] || '#94A3B8' }}>{proj.상태}</span>
+                        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: `${statusColor[proj.상태] || '#94A3B8'}20`, color: statusColor[proj.상태] || '#94A3B8', whiteSpace: 'nowrap', flexShrink: 0, marginTop: '2px' }}>{proj.상태}</span>
                       </div>
                       {proj.설명 && <p style={{ fontSize: '12px', color: '#94A3B8', margin: '0 0 12px' }}>{proj.설명}</p>}
                       <div style={{ marginBottom: '8px' }}>
