@@ -20,7 +20,7 @@ export default function Home() {
   const [auth, setAuth] = useState(false);
   const [pw, setPw] = useState('');
   const [pwError, setPwError] = useState(false);
-  const [tab, setTab] = useState<'todo' | 'memo' | 'project'>('todo');
+  const [tab, setTab] = useState<'project' | 'todo' | 'memo'>('project');
 
   // 데이터
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -150,13 +150,13 @@ export default function Home() {
             <span style={{ fontSize: '12px', color: '#64748B' }}>Workspace</span>
           </div>
           <div style={{ display: 'flex', gap: '4px' }}>
-            {(['todo', 'memo', 'project'] as const).map(t => (
+            {(['project', 'todo', 'memo'] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{
                 padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500,
                 background: tab === t ? '#3B82F6' : 'transparent',
                 color: tab === t ? '#fff' : '#94A3B8',
               }}>
-                {t === 'todo' ? '✅ 할일' : t === 'memo' ? '📝 메모' : '🚀 프로젝트'}
+                {t === 'project' ? '🚀 프로젝트' : t === 'todo' ? '✅ 할일' : '📝 메모'}
               </button>
             ))}
           </div>
@@ -255,49 +255,113 @@ export default function Home() {
         )}
 
         {/* ── 프로젝트 탭 ── */}
-        {tab === 'project' && (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>프로젝트</h2>
-              <button onClick={openAdd} style={{ padding: '8px 16px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 추가</button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '12px' }}>
-              {projects.length === 0 && <p style={{ color: '#64748B', textAlign: 'center', padding: '40px 0' }}>프로젝트를 추가해보세요</p>}
-              {projects.map(proj => {
-                const pct = parseInt(proj.진행률) || 0;
-                return (
-                  <div key={proj.ID} style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: '1px solid #334155' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                      <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>{proj.프로젝트명}</h3>
-                      <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: `${statusColor[proj.상태] || '#94A3B8'}20`, color: statusColor[proj.상태] || '#94A3B8' }}>{proj.상태}</span>
-                    </div>
-                    {proj.설명 && <p style={{ fontSize: '12px', color: '#94A3B8', margin: '0 0 12px' }}>{proj.설명}</p>}
-                    {/* 진행률 바 */}
-                    <div style={{ marginBottom: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '11px', color: '#64748B' }}>진행률</span>
-                        <span style={{ fontSize: '11px', color: progressColor(pct), fontWeight: 600 }}>{pct}%</span>
+        {tab === 'project' && (() => {
+          const PROJ_COLORS = ['#3B82F6','#22C55E','#F59E0B','#EF4444','#A855F7','#06B6D4','#F97316'];
+          const calNow = new Date();
+          const [calYear, setCalYear] = useState(calNow.getFullYear());
+          const [calMonth, setCalMonth] = useState(calNow.getMonth());
+          const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+          const firstDay = new Date(calYear, calMonth, 1).getDay();
+          const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+          const getProjectsForDate = (day: number) => {
+            const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            return projects.filter(p => p.시작일 && p.목표일 && dateStr >= p.시작일 && dateStr <= p.목표일);
+          };
+          return (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>프로젝트</h2>
+                <button onClick={openAdd} style={{ padding: '8px 16px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 추가</button>
+              </div>
+
+              {/* 달력 */}
+              <div style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: '1px solid #334155', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y-1); } else setCalMonth(m => m-1); }}
+                    style={{ background: '#334155', border: 'none', borderRadius: '6px', color: '#F1F5F9', width: '28px', height: '28px', cursor: 'pointer', fontSize: '14px' }}>‹</button>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: '#F1F5F9' }}>{calYear}년 {calMonth+1}월</span>
+                  <button onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y+1); } else setCalMonth(m => m+1); }}
+                    style={{ background: '#334155', border: 'none', borderRadius: '6px', color: '#F1F5F9', width: '28px', height: '28px', cursor: 'pointer', fontSize: '14px' }}>›</button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '4px' }}>
+                  {['일','월','화','수','목','금','토'].map((d, i) => (
+                    <div key={d} style={{ textAlign: 'center', fontSize: '11px', color: i===0 ? '#EF4444' : i===6 ? '#60A5FA' : '#64748B', padding: '4px 0', fontWeight: 500 }}>{d}</div>
+                  ))}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
+                  {Array.from({ length: totalCells }, (_, i) => {
+                    const day = i - firstDay + 1;
+                    const isValid = day >= 1 && day <= daysInMonth;
+                    const isToday = isValid && new Date(calYear, calMonth, day).toDateString() === calNow.toDateString();
+                    const projs = isValid ? getProjectsForDate(day) : [];
+                    const dow = i % 7;
+                    return (
+                      <div key={i} style={{ minHeight: '58px', padding: '4px', borderRadius: '6px', background: isToday ? '#1E3A5F' : '#0F172A', border: `1px solid ${isToday ? '#3B82F6' : '#1E293B'}` }}>
+                        {isValid && (
+                          <>
+                            <div style={{ fontSize: '11px', fontWeight: isToday ? 700 : 400, color: isToday ? '#60A5FA' : dow===0 ? '#EF4444' : dow===6 ? '#60A5FA' : '#94A3B8', marginBottom: '2px' }}>{day}</div>
+                            {projs.slice(0,2).map((p, pi) => (
+                              <div key={pi} style={{ fontSize: '9px', background: PROJ_COLORS[projects.indexOf(p) % PROJ_COLORS.length]+'30', color: PROJ_COLORS[projects.indexOf(p) % PROJ_COLORS.length], borderRadius: '3px', padding: '1px 4px', marginBottom: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.프로젝트명}</div>
+                            ))}
+                            {projs.length > 2 && <div style={{ fontSize: '9px', color: '#64748B' }}>+{projs.length-2}</div>}
+                          </>
+                        )}
                       </div>
-                      <div style={{ height: '4px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${pct}%`, background: progressColor(pct), borderRadius: '2px', transition: 'width 0.3s' }} />
+                    );
+                  })}
+                </div>
+                {projects.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #334155' }}>
+                    {projects.map((p, i) => (
+                      <div key={p.ID} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: PROJ_COLORS[i % PROJ_COLORS.length] }} />
+                        <span style={{ fontSize: '11px', color: '#94A3B8' }}>{p.프로젝트명}</span>
                       </div>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '11px', color: '#64748B' }}>
-                        {proj.시작일} ~ {proj.목표일}
-                      </span>
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <button onClick={() => openEdit(proj)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px' }}>✏️</button>
-                        <button onClick={() => handleDelete(proj)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px' }}>🗑️</button>
-                      </div>
-                    </div>
-                    {proj.메모 && <p style={{ fontSize: '11px', color: '#64748B', margin: '8px 0 0', borderTop: '1px solid #334155', paddingTop: '8px' }}>{proj.메모}</p>}
+                    ))}
                   </div>
-                );
-              })}
-            </div>
-          </>
-        )}
+                )}
+              </div>
+
+              {/* 프로젝트 카드 */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '12px' }}>
+                {projects.length === 0 && <p style={{ color: '#64748B', textAlign: 'center', padding: '40px 0' }}>프로젝트를 추가해보세요</p>}
+                {projects.map((proj, i) => {
+                  const pct = parseInt(proj.진행률) || 0;
+                  const color = PROJ_COLORS[i % PROJ_COLORS.length];
+                  return (
+                    <div key={proj.ID} style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: `1px solid ${color}40` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color, flexShrink: 0 }} />
+                          <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>{proj.프로젝트명}</h3>
+                        </div>
+                        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: `${statusColor[proj.상태] || '#94A3B8'}20`, color: statusColor[proj.상태] || '#94A3B8' }}>{proj.상태}</span>
+                      </div>
+                      {proj.설명 && <p style={{ fontSize: '12px', color: '#94A3B8', margin: '0 0 12px' }}>{proj.설명}</p>}
+                      <div style={{ marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '11px', color: '#64748B' }}>진행률</span>
+                          <span style={{ fontSize: '11px', color, fontWeight: 600 }}>{pct}%</span>
+                        </div>
+                        <div style={{ height: '4px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '2px' }} />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '11px', color: '#64748B' }}>{proj.시작일} ~ {proj.목표일}</span>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button onClick={() => openEdit(proj)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px' }}>✏️</button>
+                          <button onClick={() => handleDelete(proj)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px' }}>🗑️</button>
+                        </div>
+                      </div>
+                      {proj.메모 && <p style={{ fontSize: '11px', color: '#64748B', margin: '8px 0 0', borderTop: '1px solid #334155', paddingTop: '8px' }}>{proj.메모}</p>}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       {/* ── 모달 ── */}
