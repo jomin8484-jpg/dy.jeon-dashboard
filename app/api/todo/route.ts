@@ -10,9 +10,10 @@ const auth = new google.auth.GoogleAuth({
 });
 
 const SHEET_ID = process.env.SHEET_ID;
-const SHEET_NAME = '할일';
+const SHEET_NAME = '태스크';
 
-// 할일 목록 조회
+// ID | 프로젝트ID | 제목 | 상태 | 우선순위 | 마감일 | 메모 | 생성일
+
 export async function GET() {
   try {
     const sheets = google.sheets({ version: 'v4', auth });
@@ -23,18 +24,19 @@ export async function GET() {
     const rows = res.data.values || [];
     if (rows.length < 2) return NextResponse.json([]);
     const headers = rows[0];
-    const data = rows.slice(1).map(row => {
-      const obj: Record<string, string> = {};
-      headers.forEach((h, i) => { obj[h] = row[i] || ''; });
-      return obj;
-    });
+    const data = rows.slice(1)
+      .filter(row => row[0])
+      .map(row => {
+        const obj: Record<string, string> = {};
+        headers.forEach((h, i) => { obj[h] = row[i] || ''; });
+        return obj;
+      });
     return NextResponse.json(data);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
 
-// 할일 추가
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -45,7 +47,7 @@ export async function POST(req: Request) {
       range: `${SHEET_NAME}!A:H`,
       valueInputOption: 'RAW',
       requestBody: {
-        values: [[body.ID, body.제목, body.카테고리, body.우선순위, body.상태, body.마감일, body.메모, now]],
+        values: [[body.ID, body.프로젝트ID || '', body.제목, body.상태 || '대기', body.우선순위 || '보통', body.마감일 || '', body.메모 || '', now]],
       },
     });
     return NextResponse.json({ success: true });
@@ -54,7 +56,6 @@ export async function POST(req: Request) {
   }
 }
 
-// 할일 수정 (상태 변경 등)
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
@@ -71,7 +72,7 @@ export async function PUT(req: Request) {
       range: `${SHEET_NAME}!A${rowIndex + 1}:H${rowIndex + 1}`,
       valueInputOption: 'RAW',
       requestBody: {
-        values: [[body.ID, body.제목, body.카테고리, body.우선순위, body.상태, body.마감일, body.메모, rows[rowIndex][7] || '']],
+        values: [[body.ID, body.프로젝트ID || '', body.제목, body.상태, body.우선순위 || '보통', body.마감일 || '', body.메모 || '', rows[rowIndex][7] || '']],
       },
     });
     return NextResponse.json({ success: true });
@@ -80,7 +81,6 @@ export async function PUT(req: Request) {
   }
 }
 
-// 할일 삭제
 export async function DELETE(req: Request) {
   try {
     const { ID } = await req.json();
@@ -92,7 +92,6 @@ export async function DELETE(req: Request) {
     const rows = res.data.values || [];
     const rowIndex = rows.findIndex(r => r[0] === String(ID));
     if (rowIndex === -1) return NextResponse.json({ error: '항목 없음' }, { status: 404 });
-    // 해당 행 빈칸으로 처리
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
       range: `${SHEET_NAME}!A${rowIndex + 1}:H${rowIndex + 1}`,

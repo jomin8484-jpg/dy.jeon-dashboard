@@ -10,7 +10,7 @@ const auth = new google.auth.GoogleAuth({
 });
 
 const SHEET_ID = process.env.SHEET_ID;
-const SHEET_NAME = '프로젝트';
+const SHEET_NAME = '업무보드';
 
 export async function GET() {
   try {

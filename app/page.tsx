@@ -20,7 +20,7 @@ export default function Home() {
   const [auth, setAuth] = useState(false);
   const [pw, setPw] = useState('');
   const [pwError, setPwError] = useState(false);
-  const [tab, setTab] = useState<'project' | 'todo' | 'memo'>('project');
+  const [tab, setTab] = useState<'board' | 'task' | 'memo'>('board');
 
   // 데이터
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -35,6 +35,8 @@ export default function Home() {
 
   // 메모 선택
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
+
+  const [selectedProjId, setSelectedProjId] = useState<string | null>(null);
 
   // 프로젝트 달력
   const [calYear, setCalYear] = useState(new Date().getFullYear());
@@ -82,9 +84,9 @@ export default function Home() {
 
   const openAdd = () => {
     setEditItem(null);
-    if (tab === 'todo') setForm({ 제목: '', 카테고리: '업무', 우선순위: '보통', 상태: '대기', 마감일: '', 메모: '' });
+    if (tab === 'task') setForm({ 프로젝트ID: selectedProjId || '', 제목: '', 우선순위: '보통', 상태: '대기', 마감일: '', 메모: '' });
     if (tab === 'memo') setForm({ 제목: '', 내용: '', 태그: '' });
-    if (tab === 'project') setForm({ 프로젝트명: '', 설명: '', 상태: '진행중', 진행률: '0', 시작일: '', 목표일: '', 메모: '' });
+    if (tab === 'board') setForm({ 프로젝트명: '', 설명: '', 상태: '진행중', 진행률: '0', 시작일: '', 목표일: '', 메모: '' });
     setShowModal(true);
   };
 
@@ -95,24 +97,24 @@ export default function Home() {
   };
 
   const handleSave = async () => {
-    const url = tab === 'todo' ? '/api/todo' : tab === 'memo' ? '/api/memo' : '/api/project';
+    const url = tab === 'task' ? '/api/todo' : tab === 'memo' ? '/api/memo' : '/api/project';
     const method = editItem ? 'PUT' : 'POST';
-    const body = editItem ? { ...form, ID: editItem.ID } : { ...form, ID: nextId(tab === 'todo' ? todos : tab === 'memo' ? memos : projects) };
+    const body = editItem ? { ...form, ID: editItem.ID } : { ...form, ID: nextId(tab === 'task' ? todos : tab === 'memo' ? memos : projects) };
     await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     setShowModal(false);
     // 새로고침
     const res = await fetch(url).then(r => r.json());
-    if (tab === 'todo') setTodos(Array.isArray(res) ? res.filter((x: Todo) => x.ID) : []);
+    if (tab === 'task') setTodos(Array.isArray(res) ? res.filter((x: Todo) => x.ID) : []);
     if (tab === 'memo') setMemos(Array.isArray(res) ? res.filter((x: Memo) => x.ID) : []);
     if (tab === 'project') setProjects(Array.isArray(res) ? res.filter((x: Project) => x.ID) : []);
   };
 
   const handleDelete = async (item: any) => {
     if (!confirm('삭제할까요?')) return;
-    const url = tab === 'todo' ? '/api/todo' : tab === 'memo' ? '/api/memo' : '/api/project';
+    const url = tab === 'task' ? '/api/todo' : tab === 'memo' ? '/api/memo' : '/api/project';
     await fetch(url, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ID: item.ID }) });
     const res = await fetch(url).then(r => r.json());
-    if (tab === 'todo') setTodos(Array.isArray(res) ? res.filter((x: Todo) => x.ID) : []);
+    if (tab === 'task') setTodos(Array.isArray(res) ? res.filter((x: Todo) => x.ID) : []);
     if (tab === 'memo') { setMemos(Array.isArray(res) ? res.filter((x: Memo) => x.ID) : []); setSelectedMemo(null); }
     if (tab === 'project') setProjects(Array.isArray(res) ? res.filter((x: Project) => x.ID) : []);
   };
@@ -159,13 +161,13 @@ export default function Home() {
             <span style={{ fontSize: '12px', color: '#64748B' }}>Workspace</span>
           </div>
           <div style={{ display: 'flex', gap: '4px' }}>
-            {(['project', 'todo', 'memo'] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)} style={{
+            {(['board', 'task', 'memo'] as const).map(t => (
+              <button key={t} onClick={() => { setTab(t); if (t !== 'task') setSelectedProjId(null); }} style={{
                 padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500,
                 background: tab === t ? '#3B82F6' : 'transparent',
                 color: tab === t ? '#fff' : '#94A3B8',
               }}>
-                {t === 'project' ? '🚀 프로젝트' : t === 'todo' ? '✅ 할일' : '📝 메모'}
+                {t === 'board' ? '📋 업무보드' : t === 'task' ? '📌 태스크' : '📝 메모'}
               </button>
             ))}
           </div>
@@ -178,7 +180,7 @@ export default function Home() {
         {loading && <p style={{ color: '#64748B', textAlign: 'center' }}>불러오는 중...</p>}
 
         {/* ── 할일 탭 ── */}
-        {tab === 'todo' && (
+        {tab === 'task' && (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div>
@@ -264,7 +266,7 @@ export default function Home() {
         )}
 
         {/* ── 프로젝트 탭 ── */}
-        {tab === 'project' && (() => {
+        {tab === 'board' && (() => {
           const PROJ_COLORS = ['#3B82F6','#22C55E','#F59E0B','#EF4444','#A855F7','#06B6D4','#F97316'];
           const calNow = new Date();
           const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
@@ -438,7 +440,7 @@ export default function Home() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color, flexShrink: 0 }} />
-                          <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>{proj.프로젝트명}</h3>
+                          <h3 onClick={() => { setSelectedProjId(proj.ID); setTab('task'); }} style={{ fontSize: '15px', fontWeight: 600, margin: 0, cursor: 'pointer' }}>{proj.프로젝트명} →</h3>
                         </div>
                         <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: `${statusColor[proj.상태] || '#94A3B8'}20`, color: statusColor[proj.상태] || '#94A3B8' }}>{proj.상태}</span>
                       </div>
@@ -474,16 +476,17 @@ export default function Home() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: '#1E293B', borderRadius: '16px', padding: '28px', width: '440px', maxWidth: '90vw', border: '1px solid #334155' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 20px' }}>
-              {editItem ? '수정' : '추가'} — {tab === 'todo' ? '할일' : tab === 'memo' ? '메모' : '프로젝트'}
+              {editItem ? '수정' : '추가'} — {tab === 'task' ? '태스크' : tab === 'memo' ? '메모' : '업무보드'}
             </h3>
 
-            {tab === 'todo' && (
+            {tab === 'task' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <select value={form.프로젝트ID || ''} onChange={e => setForm({ ...form, 프로젝트ID: e.target.value })} style={inputStyle}>
+                  <option value=''>프로젝트 선택 (선택)</option>
+                  {projects.map(p => <option key={p.ID} value={p.ID}>{p.프로젝트명}</option>)}
+                </select>
                 <input placeholder="제목" value={form.제목 || ''} onChange={e => setForm({ ...form, 제목: e.target.value })} style={inputStyle} />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  <select value={form.카테고리 || '업무'} onChange={e => setForm({ ...form, 카테고리: e.target.value })} style={inputStyle}>
-                    {['업무', '개인', '미팅', '기타'].map(v => <option key={v}>{v}</option>)}
-                  </select>
                   <select value={form.우선순위 || '보통'} onChange={e => setForm({ ...form, 우선순위: e.target.value })} style={inputStyle}>
                     {['높음', '보통', '낮음'].map(v => <option key={v}>{v}</option>)}
                   </select>
@@ -504,7 +507,7 @@ export default function Home() {
               </div>
             )}
 
-            {tab === 'project' && (
+            {tab === 'board' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <input placeholder="프로젝트명" value={form.프로젝트명 || ''} onChange={e => setForm({ ...form, 프로젝트명: e.target.value })} style={inputStyle} />
                 <input placeholder="설명" value={form.설명 || ''} onChange={e => setForm({ ...form, 설명: e.target.value })} style={inputStyle} />
