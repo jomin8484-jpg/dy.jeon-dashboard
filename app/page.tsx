@@ -106,7 +106,7 @@ export default function Home() {
     const res = await fetch(url).then(r => r.json());
     if (tab === 'task') setTodos(Array.isArray(res) ? res.filter((x: Todo) => x.ID) : []);
     if (tab === 'memo') setMemos(Array.isArray(res) ? res.filter((x: Memo) => x.ID) : []);
-    if (tab === 'project') setProjects(Array.isArray(res) ? res.filter((x: Project) => x.ID) : []);
+    if (tab === 'board') setProjects(Array.isArray(res) ? res.filter((x: Project) => x.ID) : []);
   };
 
   const handleDelete = async (item: any) => {
@@ -116,7 +116,7 @@ export default function Home() {
     const res = await fetch(url).then(r => r.json());
     if (tab === 'task') setTodos(Array.isArray(res) ? res.filter((x: Todo) => x.ID) : []);
     if (tab === 'memo') { setMemos(Array.isArray(res) ? res.filter((x: Memo) => x.ID) : []); setSelectedMemo(null); }
-    if (tab === 'project') setProjects(Array.isArray(res) ? res.filter((x: Project) => x.ID) : []);
+    if (tab === 'board') setProjects(Array.isArray(res) ? res.filter((x: Project) => x.ID) : []);
   };
 
   const statusColor: Record<string, string> = {
