@@ -507,48 +507,6 @@ export default function Home() {
               </div>
             </>
           );
-        })()}
-              {/* 프로젝트 카드 */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '12px' }}>
-                {projects.length === 0 && <p style={{ color: '#64748B', textAlign: 'center', padding: '40px 0' }}>프로젝트를 추가해보세요</p>}
-                {projects.map((proj, i) => {
-                  const pct = parseInt(proj.진행률) || 0;
-                  const color = PROJ_COLORS[i % PROJ_COLORS.length];
-                  return (
-                    <div key={proj.ID} onClick={() => { setSelectedProjId(proj.ID); setTab('task'); }} style={{ background: '#1E293B', borderRadius: '12px', padding: '16px', border: `1px solid ${color}40`, cursor: 'pointer', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: color, flexShrink: 0 }} />
-                          <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0, wordBreak: 'keep-all' }}>{proj.프로젝트명}</h3>
-                        </div>
-                        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: `${statusColor[proj.상태] || '#94A3B8'}20`, color: statusColor[proj.상태] || '#94A3B8', whiteSpace: 'nowrap', flexShrink: 0, marginTop: '2px' }}>{proj.상태}</span>
-                      </div>
-                      {proj.설명 && <p style={{ fontSize: '12px', color: '#94A3B8', margin: '0 0 12px' }}>{proj.설명}</p>}
-                      <div style={{ flex: 1 }} />
-                      <div style={{ marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '11px', color: '#64748B' }}>진행률</span>
-                          <span style={{ fontSize: '11px', color, fontWeight: 600 }}>{pct}%</span>
-                        </div>
-                        <div style={{ height: '4px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '2px' }} />
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '11px', color: '#64748B' }}>{toISO(proj.시작일)} ~ {toISO(proj.목표일)}</span>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                          <button onClick={() => openEdit(proj)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px' }}>✏️</button>
-                          <button onClick={() => handleDelete(proj)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px' }}>🗑️</button>
-                        </div>
-                      </div>
-                      {proj.메모 && <p style={{ fontSize: '11px', color: '#64748B', margin: '8px 0 0', borderTop: '1px solid #334155', paddingTop: '8px' }}>{proj.메모}</p>}
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          );
-        })()}
       </div>
 
       {/* ── 모달 ── */}
