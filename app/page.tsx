@@ -120,21 +120,37 @@ export default function Home() {
   };
 
   const handleStatusChange = async (item: BoardItem, newStatus: string) => {
-    await fetch('/api/project', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, 상태: newStatus }) });
-    await loadBoard();
-    // 진행률 자동 계산
-    const projId = item.프로젝트ID;
-    if (projId) {
-      const newItems = await fetch('/api/project').then(r => r.json());
-      const tasks = newItems.filter((x: BoardItem) => x.프로젝트ID === projId && x.유형 === '태스크');
-      const done = tasks.filter((x: BoardItem) => x.상태 === '완료').length;
-      const progress = tasks.length > 0 ? Math.round(done / tasks.length * 100) : 0;
-      const proj = newItems.find((x: BoardItem) => x.ID === projId);
-      if (proj) {
-        await fetch('/api/project', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...proj, 상태: proj.상태, 메모: String(progress) }) });
-        await loadBoard();
+    const allItems = await fetch('/api/project').then(r => r.json());
+
+    if (item.유형 === '업무') {
+      // 업무 상태 변경
+      await fetch('/api/project', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, 상태: newStatus }) });
+      // 업무 완료 → 모든 태스크 완료
+      if (newStatus === '완료') {
+        const tasks = allItems.filter((x: BoardItem) => x.프로젝트ID === item.ID && x.유형 === '태스크');
+        for (const task of tasks) {
+          await fetch('/api/project', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...task, 상태: '완료' }) });
+        }
+      }
+    } else {
+      // 태스크 상태 변경
+      await fetch('/api/project', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, 상태: newStatus }) });
+      // 진행률 계산 및 업무 상태 자동 업데이트
+      const projId = item.프로젝트ID;
+      if (projId) {
+        const updatedItems = await fetch('/api/project').then(r => r.json());
+        const tasks = updatedItems.filter((x: BoardItem) => x.프로젝트ID === projId && x.유형 === '태스크');
+        const done = tasks.filter((x: BoardItem) => x.상태 === '완료').length;
+        const progress = tasks.length > 0 ? Math.round(done / tasks.length * 100) : 0;
+        const proj = updatedItems.find((x: BoardItem) => x.ID === projId);
+        if (proj) {
+          // 100% 완료 시 업무도 자동 완료
+          const newProjStatus = progress === 100 ? '완료' : proj.상태 === '완료' ? '진행중' : proj.상태;
+          await fetch('/api/project', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...proj, 상태: newProjStatus }) });
+        }
       }
     }
+    await loadBoard();
   };
 
   const handleAddTask = async () => {
@@ -287,12 +303,13 @@ export default function Home() {
                         const color = PROJ_COLORS[proj.colorIndex % PROJ_COLORS.length];
                         const isHovered = hoveredProj===proj.ID;
                         const isDimmed = hoveredProj!==null && !isHovered;
+                        const isDone = proj.상태 === '완료';
                         return (
                           <div key={`${proj.ID}-${ri}`}
                             onMouseEnter={() => setHoveredProj(proj.ID)}
                             onMouseLeave={() => setHoveredProj(null)}
-                            style={{ position: 'absolute', top: `${TRACK_TOP+proj.track*(TRACK_H+TRACK_GAP)}px`, left: `calc(${si*(100/7)}% + 2px)`, width: `calc(${span*(100/7)}% - 4px)`, height: `${TRACK_H}px`, background: color+'33', borderTop: `2px solid ${color}`, borderBottom: `2px solid ${color}`, borderLeft: isFirst?`2px solid ${color}`:'none', borderRight: isLast?`2px solid ${color}`:'none', borderRadius: isFirst&&isLast?'4px':isFirst?'4px 0 0 4px':isLast?'0 4px 4px 0':'0', display: 'flex', alignItems: 'center', paddingLeft: isFirst?'6px':'2px', overflow: 'hidden', boxSizing: 'border-box', cursor: 'pointer', opacity: isDimmed?0.2:1, transition: 'opacity 0.15s', zIndex: isHovered?10:1 }}>
-                            {isFirst && <span style={{ fontSize: '10px', fontWeight: 500, color, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{proj.제목}</span>}
+                            style={{ position: 'absolute', top: `${TRACK_TOP+proj.track*(TRACK_H+TRACK_GAP)}px`, left: `calc(${si*(100/7)}% + 2px)`, width: `calc(${span*(100/7)}% - 4px)`, height: `${TRACK_H}px`, background: isDone ? '#33333350' : color+'33', borderTop: `2px solid ${isDone ? '#555' : color}`, borderBottom: `2px solid ${isDone ? '#555' : color}`, borderLeft: isFirst?`2px solid ${isDone ? '#555' : color}`:'none', borderRight: isLast?`2px solid ${isDone ? '#555' : color}`:'none', borderRadius: isFirst&&isLast?'4px':isFirst?'4px 0 0 4px':isLast?'0 4px 4px 0':'0', display: 'flex', alignItems: 'center', paddingLeft: isFirst?'6px':'2px', overflow: 'hidden', boxSizing: 'border-box', cursor: 'pointer', opacity: isDimmed?0.2:isDone?0.4:1, transition: 'opacity 0.15s', zIndex: isHovered?10:1 }}>
+                            {isFirst && <span style={{ fontSize: '10px', fontWeight: 500, color: isDone ? '#888' : color, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textDecoration: isDone ? 'line-through' : 'none' }}>{proj.제목}</span>}
                           </div>
                         );
                       })}
@@ -339,7 +356,12 @@ export default function Home() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: color, flexShrink: 0 }} />
                         <span style={{ fontSize: '13px', fontWeight: 600, color: '#F1F5F9', flex: 1 }}>{proj.제목}</span>
-                        <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '8px', background: `${STATUS_COLOR[proj.상태]||'#94A3B8'}20`, color: STATUS_COLOR[proj.상태]||'#94A3B8', whiteSpace: 'nowrap' }}>{proj.상태}</span>
+                        <select value={proj.상태} onClick={e => e.stopPropagation()} onChange={e => { e.stopPropagation(); handleStatusChange(proj, e.target.value); }}
+                          style={{ padding: '2px 6px', borderRadius: '6px', border: 'none', fontSize: '10px', fontWeight: 500, cursor: 'pointer', outline: 'none', flexShrink: 0, colorScheme: 'dark',
+                            background: proj.상태==='완료'?'#16532430':proj.상태==='진행중'?'#1E3A5F':'#334155',
+                            color: proj.상태==='완료'?'#22C55E':proj.상태==='진행중'?'#60A5FA':'#94A3B8' }}>
+                          {['진행중','완료','보류','대기'].map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
                       </div>
                       {proj.설명 && <p style={{ fontSize: '11px', color: '#64748B', margin: '0 0 6px', paddingLeft: '16px' }}>{proj.설명}</p>}
                       <div style={{ paddingLeft: '16px' }}>
