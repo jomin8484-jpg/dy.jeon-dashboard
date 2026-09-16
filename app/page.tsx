@@ -48,6 +48,7 @@ export default function Home() {
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [memoForm, setMemoForm] = useState({ 제목: '', 내용: '', 태그: '' });
   const [newGroupTitle, setNewGroupTitle] = useState('');
 
   const [showModal, setShowModal] = useState(false);
@@ -190,26 +191,25 @@ export default function Home() {
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#faf8f4', fontFamily: 'Arial, sans-serif', color: '#2c2620' }}>
-      {/* 헤더 */}
-      <div style={{ background: '#f2ede4', borderBottom: '1px solid #e0d8c8', padding: '0 24px' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '16px', fontWeight: 700, color: '#2c2620' }}>전동열</span>
-            <span style={{ fontSize: '12px', color: '#7a6e5e' }}>Workspace</span>
-          </div>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            {(['home', 'board', 'memo'] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500, background: tab === t ? '#c4a882' : 'transparent', color: tab === t ? '#fff' : '#9a8e7e' }}>
-                {t === 'home' ? '🏠 홈' : t === 'board' ? '📋 업무보드' : '📝 메모'}
-              </button>
-            ))}
-          </div>
-          <button onClick={() => { sessionStorage.removeItem('pd_auth'); setAuth(false); }} style={{ background: 'none', border: 'none', color: '#7a6e5e', fontSize: '12px', cursor: 'pointer' }}>로그아웃</button>
+    <div style={{ minHeight: '100vh', background: '#faf8f4', fontFamily: 'Arial, sans-serif', color: '#2c2620', display: 'flex' }}>
+      {/* 사이드바 */}
+      <div style={{ width: '200px', minHeight: '100vh', background: '#f2ede4', borderRight: '1px solid #e0d8c8', display: 'flex', flexDirection: 'column', padding: '24px 12px', flexShrink: 0 }}>
+        <div style={{ marginBottom: '32px', paddingLeft: '8px' }}>
+          <p style={{ fontSize: '16px', fontWeight: 700, color: '#2c2620', margin: '0 0 2px' }}>전동열</p>
+          <p style={{ fontSize: '11px', color: '#9a8e7e', margin: 0 }}>Workspace</p>
         </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+          {(['home', 'board', 'memo'] as const).map(t => (
+            <button key={t} onClick={() => setTab(t)} style={{ padding: '9px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: tab === t ? 600 : 400, textAlign: 'left', background: tab === t ? '#c4a882' : 'transparent', color: tab === t ? '#fff' : '#7a6e5e', transition: 'all 0.15s' }}>
+              {t === 'home' ? '🏠  홈' : t === 'board' ? '📋  업무보드' : '📝  메모'}
+            </button>
+          ))}
+        </div>
+        <button onClick={() => { sessionStorage.removeItem('pd_auth'); setAuth(false); }} style={{ padding: '8px 12px', background: 'none', border: '1px solid #e0d8c8', borderRadius: '8px', color: '#9a8e7e', fontSize: '12px', cursor: 'pointer', textAlign: 'left' }}>로그아웃</button>
       </div>
 
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px' }}>
+      {/* 메인 콘텐츠 */}
+      <div style={{ flex: 1, padding: '32px', overflowY: 'auto', maxWidth: '900px' }}>
         {loading && <p style={{ color: '#7a6e5e', textAlign: 'center' }}>불러오는 중...</p>}
 
         {/* ── 홈 탭 ── */}
@@ -455,42 +455,59 @@ export default function Home() {
         {/* ── 메모 탭 ── */}
         {tab === 'memo' && (
           <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>📝 메모</h2>
-              <button onClick={() => { setEditItem(null); setForm({ 제목: '', 내용: '', 태그: '' }); setShowModal(true); }}
-                style={{ padding: '8px 16px', background: '#c4a882', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 추가</button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: selectedMemo ? '280px 1fr' : '1fr', gap: '16px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {memos.length === 0 && <p style={{ color: '#7a6e5e', textAlign: 'center', padding: '40px 0' }}>메모를 추가해보세요</p>}
-                {memos.map(memo => (
-                  <div key={memo.ID} onClick={() => setSelectedMemo(memo)}
-                    style={{ background: selectedMemo?.ID===memo.ID?'#dbeafe':'#f2ede4', borderRadius: '10px', padding: '12px 14px', cursor: 'pointer', border: `1px solid ${selectedMemo?.ID===memo.ID?'#c4a882':'#e0d8c8'}` }}>
-                    <p style={{ fontSize: '14px', fontWeight: 500, margin: '0 0 4px', color: '#2c2620' }}>{memo.제목}</p>
-                    <p style={{ fontSize: '11px', color: '#9a8e7e', margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memo.내용}</p>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '10px', color: '#7a6e5e' }}>{memo.수정일}</span>
-                      {memo.태그 && <span style={{ fontSize: '10px', color: '#c4a882' }}>#{memo.태그}</span>}
-                    </div>
-                  </div>
-                ))}
+            <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 20px' }}>📝 메모</h2>
+
+            {/* 인라인 입력폼 */}
+            <div style={{ background: '#f2ede4', borderRadius: '12px', padding: '16px', border: '1px solid #e0d8c8', marginBottom: '20px' }}>
+              <input placeholder="제목" value={memoForm.제목} onChange={e => setMemoForm({...memoForm, 제목: e.target.value})}
+                style={{ width: '100%', padding: '8px 12px', background: '#faf8f4', border: '1px solid #e0d8c8', borderRadius: '8px', color: '#2c2620', fontSize: '14px', fontWeight: 500, outline: 'none', boxSizing: 'border-box', marginBottom: '8px' }} />
+              <textarea placeholder="내용을 입력하세요..." value={memoForm.내용} onChange={e => setMemoForm({...memoForm, 내용: e.target.value})}
+                style={{ width: '100%', padding: '8px 12px', background: '#faf8f4', border: '1px solid #e0d8c8', borderRadius: '8px', color: '#2c2620', fontSize: '13px', outline: 'none', boxSizing: 'border-box', height: '100px', resize: 'vertical', marginBottom: '8px', lineHeight: '1.6' }} />
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input placeholder="태그 (선택)" value={memoForm.태그} onChange={e => setMemoForm({...memoForm, 태그: e.target.value})}
+                  style={{ flex: 1, padding: '7px 12px', background: '#faf8f4', border: '1px solid #e0d8c8', borderRadius: '8px', color: '#2c2620', fontSize: '12px', outline: 'none' }} />
+                <button onClick={async () => {
+                  if (!memoForm.제목.trim()) return;
+                  const now = new Date().toISOString().slice(0,10);
+                  await fetch('/api/memo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ID: nextId(memos), 제목: memoForm.제목, 내용: memoForm.내용, 태그: memoForm.태그, 생성일: now, 수정일: now }) });
+                  setMemoForm({ 제목: '', 내용: '', 태그: '' });
+                  const res = await fetch('/api/memo').then(r => r.json());
+                  setMemos(Array.isArray(res) ? res.filter((x: Memo) => x.ID) : []);
+                }} style={{ padding: '7px 18px', background: '#c4a882', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>저장</button>
               </div>
+            </div>
+
+            {/* 메모 목록 */}
+            <div style={{ display: 'grid', gridTemplateColumns: selectedMemo ? '260px 1fr' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+              {memos.length === 0 && <p style={{ color: '#7a6e5e', gridColumn: '1/-1' }}>메모를 추가해보세요</p>}
+              {memos.map(memo => (
+                <div key={memo.ID} onClick={() => setSelectedMemo(selectedMemo?.ID === memo.ID ? null : memo)}
+                  style={{ background: selectedMemo?.ID===memo.ID ? '#ede8de' : '#f2ede4', borderRadius: '10px', padding: '14px', cursor: 'pointer', border: `1px solid ${selectedMemo?.ID===memo.ID ? '#c4a882' : '#e0d8c8'}`, transition: 'all 0.15s' }}>
+                  <p style={{ fontSize: '14px', fontWeight: 600, margin: '0 0 6px', color: '#2c2620' }}>{memo.제목}</p>
+                  <p style={{ fontSize: '12px', color: '#7a6e5e', margin: '0 0 8px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{memo.내용}</p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '10px', color: '#9a8e7e' }}>{memo.수정일}</span>
+                    {memo.태그 && <span style={{ fontSize: '10px', color: '#c4a882' }}>#{memo.태그}</span>}
+                  </div>
+                </div>
+              ))}
+              {/* 선택된 메모 상세 */}
               {selectedMemo && (
-                <div style={{ background: '#f2ede4', borderRadius: '12px', padding: '20px', border: '1px solid #e0d8c8' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div style={{ background: '#faf8f4', borderRadius: '12px', padding: '20px', border: '1px solid #e0d8c8' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                     <div>
-                      <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>{selectedMemo.제목}</h3>
-                      <span style={{ fontSize: '11px', color: '#7a6e5e' }}>{selectedMemo.수정일} 수정</span>
+                      <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 3px' }}>{selectedMemo.제목}</h3>
+                      <span style={{ fontSize: '11px', color: '#9a8e7e' }}>{selectedMemo.수정일} 수정</span>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => { setEditItem(selectedMemo); setForm({ ...selectedMemo }); setShowModal(true); }}
-                        style={{ padding: '6px 12px', background: '#e0d8c8', border: 'none', borderRadius: '6px', color: '#2c2620', fontSize: '12px', cursor: 'pointer' }}>수정</button>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button onClick={() => { setEditItem(selectedMemo); setForm({...selectedMemo}); setShowModal(true); }}
+                        style={{ padding: '5px 10px', background: '#e0d8c8', border: 'none', borderRadius: '6px', color: '#2c2620', fontSize: '12px', cursor: 'pointer' }}>수정</button>
                       <button onClick={() => handleDelete(selectedMemo)}
-                        style={{ padding: '6px 12px', background: '#fde8e8', border: 'none', borderRadius: '6px', color: '#c0392b', fontSize: '12px', cursor: 'pointer' }}>삭제</button>
+                        style={{ padding: '5px 10px', background: '#fde8e8', border: 'none', borderRadius: '6px', color: '#c0392b', fontSize: '12px', cursor: 'pointer' }}>삭제</button>
                     </div>
                   </div>
-                  <p style={{ fontSize: '14px', color: '#5a4e3e', lineHeight: '1.8', whiteSpace: 'pre-wrap', margin: 0 }}>{selectedMemo.내용}</p>
-                  {selectedMemo.태그 && <p style={{ marginTop: '16px', fontSize: '12px', color: '#c4a882' }}>#{selectedMemo.태그}</p>}
+                  <p style={{ fontSize: '13px', color: '#5a4e3e', lineHeight: '1.8', whiteSpace: 'pre-wrap', margin: 0 }}>{selectedMemo.내용}</p>
+                  {selectedMemo.태그 && <p style={{ marginTop: '12px', fontSize: '12px', color: '#c4a882' }}>#{selectedMemo.태그}</p>}
                 </div>
               )}
             </div>
