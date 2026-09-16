@@ -395,8 +395,22 @@ export default function Home() {
                     </div>
                   </div>
 
+                  {/* 그룹/태스크 추가 — 상단 고정 */}
+                  <div style={{ marginBottom: '12px', padding: '12px', background: '#0F172A', borderRadius: '8px', border: '1px solid #334155' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                      <input placeholder="그룹 추가... (예: A. 준비사항)" value={newGroupTitle} onChange={e => setNewGroupTitle(e.target.value)} onKeyDown={e => e.key==='Enter' && handleAddGroup()}
+                        style={{ flex: 1, padding: '7px 12px', background: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F1F5F9', fontSize: '12px', outline: 'none', colorScheme: 'dark' }} />
+                      <button onClick={handleAddGroup} style={{ padding: '7px 12px', background: '#334155', border: 'none', borderRadius: '8px', color: '#94A3B8', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>+ 그룹</button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input placeholder="태스크 추가..." value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} onKeyDown={e => e.key==='Enter' && handleAddTask()}
+                        style={{ flex: 1, padding: '7px 12px', background: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F1F5F9', fontSize: '12px', outline: 'none', colorScheme: 'dark' }} />
+                      <button onClick={handleAddTask} style={{ padding: '7px 14px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ 태스크</button>
+                    </div>
+                  </div>
+
                   {/* 진행률 */}
-                  <div style={{ marginBottom: '16px', padding: '10px 12px', background: '#0F172A', borderRadius: '8px' }}>
+                  <div style={{ marginBottom: '12px', padding: '10px 12px', background: '#0F172A', borderRadius: '8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
                       <span style={{ fontSize: '12px', color: '#64748B' }}>진행률</span>
                       <span style={{ fontSize: '12px', fontWeight: 700, color: '#3B82F6' }}>{progress}%</span>
@@ -407,8 +421,8 @@ export default function Home() {
                     <p style={{ fontSize: '11px', color: '#475569', margin: '6px 0 0' }}>{projTasks.length}개 항목 · 완료 {completedCount}개</p>
                   </div>
 
-                  {/* 체크리스트 아이템 */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
+                  {/* 체크리스트 — 스크롤 */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '50vh', overflowY: 'auto', paddingRight: '4px' }}>
                     {projItems.length === 0 && <p style={{ color: '#64748B', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>아래에서 그룹 또는 태스크를 추가해보세요</p>}
                     {projItems.map(item => {
                       if (item.유형 === '그룹') return (
@@ -431,19 +445,6 @@ export default function Home() {
                         </div>
                       );
                     })}
-                  </div>
-
-                  {/* 그룹 추가 */}
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                    <input placeholder="그룹 추가... (예: A. 준비사항)" value={newGroupTitle} onChange={e => setNewGroupTitle(e.target.value)} onKeyDown={e => e.key==='Enter' && handleAddGroup()}
-                      style={{ flex: 1, padding: '8px 12px', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', color: '#F1F5F9', fontSize: '13px', outline: 'none', colorScheme: 'dark' }} />
-                    <button onClick={handleAddGroup} style={{ padding: '8px 12px', background: '#334155', border: 'none', borderRadius: '8px', color: '#94A3B8', fontSize: '12px', cursor: 'pointer' }}>+ 그룹</button>
-                  </div>
-                  {/* 태스크 추가 */}
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input placeholder="태스크 추가..." value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} onKeyDown={e => e.key==='Enter' && handleAddTask()}
-                      style={{ flex: 1, padding: '8px 12px', background: '#0F172A', border: '1px solid #334155', borderRadius: '8px', color: '#F1F5F9', fontSize: '13px', outline: 'none', colorScheme: 'dark' }} />
-                    <button onClick={handleAddTask} style={{ padding: '8px 14px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 태스크</button>
                   </div>
                 </div>
               )}
