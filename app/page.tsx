@@ -396,7 +396,7 @@ export default function Home() {
                   </div>
 
                   {/* 진행률 */}
-                  <div style={{ marginBottom: '24px', padding: '10px 12px', background: '#0F172A', borderRadius: '8px' }}>
+                  <div style={{ marginBottom: '12px', padding: '10px 12px', background: '#0F172A', borderRadius: '8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
                       <span style={{ fontSize: '12px', color: '#64748B' }}>진행률</span>
                       <span style={{ fontSize: '12px', fontWeight: 700, color: '#3B82F6' }}>{progress}%</span>
@@ -408,7 +408,7 @@ export default function Home() {
                   </div>
 
                   {/* 그룹/태스크 추가 — 상단 고정 */}
-                  <div style={{ marginBottom: '24px', padding: '12px', background: '#0F172A', borderRadius: '8px', border: '1px solid #334155' }}>
+                  <div style={{ marginBottom: '12px', padding: '12px', background: '#0F172A', borderRadius: '8px', border: '1px solid #334155' }}>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                       <input placeholder="그룹 추가... (예: A. 준비사항)" value={newGroupTitle} onChange={e => setNewGroupTitle(e.target.value)} onKeyDown={e => e.key==='Enter' && handleAddGroup()}
                         style={{ flex: 1, padding: '7px 12px', background: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F1F5F9', fontSize: '12px', outline: 'none', colorScheme: 'dark' }} />
