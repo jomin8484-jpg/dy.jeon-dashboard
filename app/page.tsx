@@ -310,7 +310,7 @@ export default function Home() {
                             onMouseEnter={() => setHoveredProj(proj.ID)}
                             onMouseLeave={() => setHoveredProj(null)}
                             style={{ position: 'absolute', top: `${TRACK_TOP+proj.track*(TRACK_H+TRACK_GAP)}px`, left: `calc(${si*(100/7)}% + 2px)`, width: `calc(${span*(100/7)}% - 4px)`, height: `${TRACK_H}px`, background: isDone ? '#cccccc80' : color+'cc', borderRadius: isFirst&&isLast?'4px':isFirst?'4px 0 0 4px':isLast?'0 4px 4px 0':'0', display: 'flex', alignItems: 'center', paddingLeft: isFirst?'6px':'2px', overflow: 'hidden', boxSizing: 'border-box', cursor: 'pointer', opacity: isDimmed?0.2:isDone?0.5:1, transition: 'opacity 0.15s', zIndex: isHovered?10:1 }}>
-                            {isFirst && <span style={{ fontSize: '10px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textDecoration: isDone ? 'line-through' : 'none' }}>{proj.제목}</span>}
+                            {(isFirst || si === 0) && <span style={{ fontSize: '10px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textDecoration: isDone ? 'line-through' : 'none' }}>{proj.제목}</span>}
                           </div>
                         );
                       })}
