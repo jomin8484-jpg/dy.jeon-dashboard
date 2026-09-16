@@ -16,6 +16,18 @@ interface Project {
 
 const PASSWORD = 'selvatico2026';
 
+// 날짜 형식 변환 — '2026. 9. 15' → '2026-09-15'
+const toISO = (d: string) => {
+  if (!d) return '';
+  d = d.replace(/^'/, '').trim();
+  // 이미 YYYY-MM-DD 형식이면 그대로
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+  // 'YYYY. M. D' 형식 변환
+  const m = d.match(/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  return d;
+};
+
 export default function Home() {
   const [auth, setAuth] = useState(false);
   const [pw, setPw] = useState('');
@@ -71,8 +83,8 @@ export default function Home() {
       setMemos(Array.isArray(m) ? m.filter((x: Memo) => x.ID) : []);
       setProjects(Array.isArray(p) ? p.filter((x: Project) => x.ID).map((x: Project) => ({
         ...x,
-        시작일: (x.시작일 || '').replace(/^'/, ''),
-        목표일: (x.목표일 || '').replace(/^'/, ''),
+        시작일: toISO(x.시작일 || ''),
+        목표일: toISO(x.목표일 || ''),
       })) : []);
     }).finally(() => setLoading(false));
   }, [auth]);
@@ -208,7 +220,7 @@ export default function Home() {
                   body: JSON.stringify({ ...proj, 진행률: String(newProgress) }),
                 });
                 const pres = await fetch('/api/project').then(r => r.json());
-                setProjects(Array.isArray(pres) ? pres.filter((x: Project) => x.ID).map((x: Project) => ({ ...x, 시작일: (x.시작일||'').replace(/^'/,''), 목표일: (x.목표일||'').replace(/^'/,'') })) : []);
+                setProjects(Array.isArray(pres) ? pres.filter((x: Project) => x.ID).map((x: Project) => ({ ...x, 시작일: toISO(x.시작일||''), 목표일: toISO(x.목표일||'') })) : []);
               }
             }
           };
@@ -243,7 +255,7 @@ export default function Home() {
                   <div style={{ height: '6px', background: '#334155', borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${progress}%`, background: '#3B82F6', borderRadius: '3px', transition: 'width 0.3s' }} />
                   </div>
-                  <p style={{ fontSize: '11px', color: '#64748B', margin: '6px 0 0' }}>{selectedProj.시작일} ~ {selectedProj.목표일}</p>
+                  <p style={{ fontSize: '11px', color: '#64748B', margin: '6px 0 0' }}>{toISO(selectedProj.시작일)} ~ {toISO(selectedProj.목표일)}</p>
                 </div>
               )}
 
@@ -280,7 +292,7 @@ export default function Home() {
                         </div>
                         <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
                           {todo.우선순위 && <span style={{ color: priorityColor[todo.우선순위] || '#64748B' }}>{todo.우선순위}</span>}
-                          {todo.마감일 && <span>· {todo.마감일}</span>}
+                          {todo.마감일 && <span>· {toISO(todo.마감일)}</span>}
                           {todo.메모 && <span>· {todo.메모}</span>}
                         </div>
                       </div>
@@ -395,7 +407,7 @@ export default function Home() {
 
                 // 트랙 배정 (겹치는 프로젝트는 다른 트랙)
                 const validProjs = projects
-                  .map(p => ({ ...p, 시작일: (p.시작일||'').replace(/^'/,''), 목표일: (p.목표일||'').replace(/^'/,''), colorIndex: projects.findIndex(x => x.ID === p.ID) }))
+                  .map(p => ({ ...p, 시작일: toISO(p.시작일||''), 목표일: toISO(p.목표일||''), colorIndex: projects.findIndex(x => x.ID === p.ID) }))
                   .filter(p => p.시작일 && p.목표일 && p.시작일 <= monthEnd && p.목표일 >= monthStart);
                 const sorted = [...validProjs].sort((a,b) => a.시작일.localeCompare(b.시작일));
                 const tracks: string[][] = [];
@@ -535,7 +547,7 @@ export default function Home() {
                         </div>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '11px', color: '#64748B' }}>{proj.시작일} ~ {proj.목표일}</span>
+                        <span style={{ fontSize: '11px', color: '#64748B' }}>{toISO(proj.시작일)} ~ {toISO(proj.목표일)}</span>
                         <div style={{ display: 'flex', gap: '4px' }}>
                           <button onClick={() => openEdit(proj)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px' }}>✏️</button>
                           <button onClick={() => handleDelete(proj)} style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '14px' }}>🗑️</button>
