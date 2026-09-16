@@ -28,9 +28,9 @@ const toISO = (d: string) => {
   return d;
 };
 
-const PROJ_COLORS = ['#3B82F6','#22C55E','#F59E0B','#EF4444','#A855F7','#06B6D4','#F97316'];
-const STATUS_COLOR: Record<string, string> = { '진행중': '#3B82F6', '완료': '#22C55E', '대기': '#94A3B8', '보류': '#F59E0B' };
-const PRIORITY_COLOR: Record<string, string> = { '높음': '#EF4444', '보통': '#3B82F6', '낮음': '#94A3B8' };
+const PROJ_COLORS = ['#c4a882','#5a9a6e','#F59E0B','#e05a4e','#A855F7','#06B6D4','#F97316'];
+const STATUS_COLOR: Record<string, string> = { '진행중': '#c4a882', '완료': '#5a9a6e', '대기': '#9a8e7e', '보류': '#F59E0B' };
+const PRIORITY_COLOR: Record<string, string> = { '높음': '#e05a4e', '보통': '#c4a882', '낮음': '#9a8e7e' };
 
 export default function Home() {
   const [auth, setAuth] = useState(false);
@@ -176,41 +176,41 @@ export default function Home() {
   const progress = projTasks.length > 0 ? Math.round(completedCount / projTasks.length * 100) : 0;
 
   if (!auth) return (
-    <div style={{ minHeight: '100vh', background: '#0F172A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ background: '#1E293B', borderRadius: '16px', padding: '48px 40px', width: '340px', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
-        <p style={{ fontSize: '11px', color: '#64748B', letterSpacing: '0.15em', margin: '0 0 8px' }}>PERSONAL WORKSPACE</p>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#F1F5F9', margin: '0 0 32px' }}>전동열</h1>
+    <div style={{ minHeight: '100vh', background: '#faf8f4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>
+      <div style={{ background: '#f2ede4', borderRadius: '16px', padding: '48px 40px', width: '340px', boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}>
+        <p style={{ fontSize: '11px', color: '#7a6e5e', letterSpacing: '0.15em', margin: '0 0 8px' }}>PERSONAL WORKSPACE</p>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#2c2620', margin: '0 0 32px' }}>전동열</h1>
         <input type="password" placeholder="비밀번호 입력" value={pw}
           onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()}
-          style={{ width: '100%', padding: '12px 16px', background: '#0F172A', border: `1px solid ${pwError ? '#EF4444' : '#334155'}`, borderRadius: '8px', color: '#F1F5F9', fontSize: '14px', outline: 'none', boxSizing: 'border-box', marginBottom: '8px', colorScheme: 'dark' }} />
-        {pwError && <p style={{ color: '#EF4444', fontSize: '12px', margin: '0 0 12px' }}>비밀번호가 틀렸어요.</p>}
-        <button onClick={handleLogin} style={{ width: '100%', padding: '12px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer', marginTop: '8px' }}>로그인</button>
+          style={{ width: '100%', padding: '12px 16px', background: '#faf8f4', border: `1px solid ${pwError ? '#e05a4e' : '#e0d8c8'}`, borderRadius: '8px', color: '#2c2620', fontSize: '14px', outline: 'none', boxSizing: 'border-box', marginBottom: '8px', colorScheme: 'light' }} />
+        {pwError && <p style={{ color: '#e05a4e', fontSize: '12px', margin: '0 0 12px' }}>비밀번호가 틀렸어요.</p>}
+        <button onClick={handleLogin} style={{ width: '100%', padding: '12px', background: '#c4a882', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer', marginTop: '8px' }}>로그인</button>
       </div>
     </div>
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0F172A', fontFamily: 'Arial, sans-serif', color: '#F1F5F9' }}>
+    <div style={{ minHeight: '100vh', background: '#faf8f4', fontFamily: 'Arial, sans-serif', color: '#2c2620' }}>
       {/* 헤더 */}
-      <div style={{ background: '#1E293B', borderBottom: '1px solid #334155', padding: '0 24px' }}>
+      <div style={{ background: '#f2ede4', borderBottom: '1px solid #e0d8c8', padding: '0 24px' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '16px', fontWeight: 700, color: '#F1F5F9' }}>전동열</span>
-            <span style={{ fontSize: '12px', color: '#64748B' }}>Workspace</span>
+            <span style={{ fontSize: '16px', fontWeight: 700, color: '#2c2620' }}>전동열</span>
+            <span style={{ fontSize: '12px', color: '#7a6e5e' }}>Workspace</span>
           </div>
           <div style={{ display: 'flex', gap: '4px' }}>
             {(['home', 'board', 'memo'] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500, background: tab === t ? '#3B82F6' : 'transparent', color: tab === t ? '#fff' : '#94A3B8' }}>
+              <button key={t} onClick={() => setTab(t)} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500, background: tab === t ? '#c4a882' : 'transparent', color: tab === t ? '#fff' : '#9a8e7e' }}>
                 {t === 'home' ? '🏠 홈' : t === 'board' ? '📋 업무보드' : '📝 메모'}
               </button>
             ))}
           </div>
-          <button onClick={() => { sessionStorage.removeItem('pd_auth'); setAuth(false); }} style={{ background: 'none', border: 'none', color: '#64748B', fontSize: '12px', cursor: 'pointer' }}>로그아웃</button>
+          <button onClick={() => { sessionStorage.removeItem('pd_auth'); setAuth(false); }} style={{ background: 'none', border: 'none', color: '#7a6e5e', fontSize: '12px', cursor: 'pointer' }}>로그아웃</button>
         </div>
       </div>
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px' }}>
-        {loading && <p style={{ color: '#64748B', textAlign: 'center' }}>불러오는 중...</p>}
+        {loading && <p style={{ color: '#7a6e5e', textAlign: 'center' }}>불러오는 중...</p>}
 
         {/* ── 홈 탭 ── */}
         {tab === 'home' && (() => {
@@ -262,21 +262,21 @@ export default function Home() {
           return (
             <>
               <div style={{ marginBottom: '20px' }}>
-                <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#F1F5F9', margin: '0 0 4px' }}>안녕하세요, 전동열 책임님 👋</h1>
-                <p style={{ fontSize: '12px', color: '#64748B', margin: 0 }}>진행중인 업무 {projects.filter(p=>p.상태==='진행중').length}개</p>
+                <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#2c2620', margin: '0 0 4px' }}>안녕하세요, 전동열 책임님 👋</h1>
+                <p style={{ fontSize: '12px', color: '#7a6e5e', margin: 0 }}>진행중인 업무 {projects.filter(p=>p.상태==='진행중').length}개</p>
               </div>
-              <div style={{ border: '1px solid #334155', borderRadius: '12px', overflow: 'hidden', background: '#1E293B' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #334155' }}>
-                  <button onClick={() => { if (calMonth===0){setCalMonth(11);setCalYear((y:number)=>y-1);}else setCalMonth((m:number)=>m-1); }} style={{ background: '#334155', border: 'none', borderRadius: '6px', color: '#F1F5F9', width: '28px', height: '28px', cursor: 'pointer', fontSize: '14px' }}>‹</button>
+              <div style={{ border: '1px solid #e0d8c8', borderRadius: '12px', overflow: 'hidden', background: '#f2ede4' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #e0d8c8' }}>
+                  <button onClick={() => { if (calMonth===0){setCalMonth(11);setCalYear((y:number)=>y-1);}else setCalMonth((m:number)=>m-1); }} style={{ background: '#e0d8c8', border: 'none', borderRadius: '6px', color: '#2c2620', width: '28px', height: '28px', cursor: 'pointer', fontSize: '14px' }}>‹</button>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#F1F5F9' }}>{calYear}년 {calMonth+1}월</span>
-                    <button onClick={() => { setCalYear(new Date().getFullYear()); setCalMonth(new Date().getMonth()); }} style={{ background: '#334155', border: 'none', borderRadius: '6px', padding: '3px 10px', fontSize: '11px', color: '#94A3B8', cursor: 'pointer' }}>오늘</button>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#2c2620' }}>{calYear}년 {calMonth+1}월</span>
+                    <button onClick={() => { setCalYear(new Date().getFullYear()); setCalMonth(new Date().getMonth()); }} style={{ background: '#e0d8c8', border: 'none', borderRadius: '6px', padding: '3px 10px', fontSize: '11px', color: '#9a8e7e', cursor: 'pointer' }}>오늘</button>
                   </div>
-                  <button onClick={() => { if (calMonth===11){setCalMonth(0);setCalYear((y:number)=>y+1);}else setCalMonth((m:number)=>m+1); }} style={{ background: '#334155', border: 'none', borderRadius: '6px', color: '#F1F5F9', width: '28px', height: '28px', cursor: 'pointer', fontSize: '14px' }}>›</button>
+                  <button onClick={() => { if (calMonth===11){setCalMonth(0);setCalYear((y:number)=>y+1);}else setCalMonth((m:number)=>m+1); }} style={{ background: '#e0d8c8', border: 'none', borderRadius: '6px', color: '#2c2620', width: '28px', height: '28px', cursor: 'pointer', fontSize: '14px' }}>›</button>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: '#0F172A', borderBottom: '1px solid #334155' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: '#faf8f4', borderBottom: '1px solid #e0d8c8' }}>
                   {['일','월','화','수','목','금','토'].map((d,i) => (
-                    <div key={d} style={{ textAlign: 'center', padding: '6px 0', fontSize: '11px', fontWeight: 500, color: i===0?'#EF4444':i===6?'#60A5FA':'#64748B' }}>{d}</div>
+                    <div key={d} style={{ textAlign: 'center', padding: '6px 0', fontSize: '11px', fontWeight: 500, color: i===0?'#e05a4e':i===6?'#a07850':'#7a6e5e' }}>{d}</div>
                   ))}
                 </div>
                 {rows.map((week, ri) => {
@@ -284,10 +284,10 @@ export default function Home() {
                   const maxTrack = weekProjs.length > 0 ? Math.max(...weekProjs.map(p => p.track)) : -1;
                   const rowH = TRACK_TOP + (maxTrack+1)*(TRACK_H+TRACK_GAP) + 8;
                   return (
-                    <div key={ri} style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderBottom: ri<rows.length-1?'1px solid #334155':'none', position: 'relative', minHeight: `${Math.max(rowH,72)}px` }}>
+                    <div key={ri} style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderBottom: ri<rows.length-1?'1px solid #e0d8c8':'none', position: 'relative', minHeight: `${Math.max(rowH,72)}px` }}>
                       {week.map((cell, ci) => (
-                        <div key={ci} style={{ borderRight: ci<6?'1px solid #334155':'none', padding: '4px 3px', background: cell.current?'#1E293B':'#0F172A', minHeight: '72px' }}>
-                          <div style={{ fontSize: '11px', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: cell.date===today?'#3B82F6':'transparent', color: cell.date===today?'#fff':!cell.current?'#475569':ci===0?'#EF4444':ci===6?'#60A5FA':'#94A3B8', fontWeight: cell.date===today?700:400 }}>{cell.day}</div>
+                        <div key={ci} style={{ borderRight: ci<6?'1px solid #e0d8c8':'none', padding: '4px 3px', background: cell.current?'#f2ede4':'#faf8f4', minHeight: '72px' }}>
+                          <div style={{ fontSize: '11px', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: cell.date===today?'#c4a882':'transparent', color: cell.date===today?'#fff':!cell.current?'#8a7e6e':ci===0?'#e05a4e':ci===6?'#a07850':'#9a8e7e', fontWeight: cell.date===today?700:400 }}>{cell.day}</div>
                         </div>
                       ))}
                       {trackedProjs.map(proj => {
@@ -317,11 +317,11 @@ export default function Home() {
                   );
                 })}
                 {projects.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', padding: '10px 16px', borderTop: '1px solid #334155' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', padding: '10px 16px', borderTop: '1px solid #e0d8c8' }}>
                     {projects.map((p, i) => (
                       <div key={p.ID} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                         <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: PROJ_COLORS[i%PROJ_COLORS.length] }} />
-                        <span style={{ fontSize: '11px', color: '#94A3B8' }}>{p.제목}</span>
+                        <span style={{ fontSize: '11px', color: '#9a8e7e' }}>{p.제목}</span>
                       </div>
                     ))}
                   </div>
@@ -337,13 +337,13 @@ export default function Home() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>📋 업무보드</h2>
               <button onClick={() => { setEditItem(null); setForm({ 제목: '', 설명: '', 유형: '업무', 상태: '진행중', 시작일: '', 목표일: '', 메모: '' }); setShowModal(true); }}
-                style={{ padding: '8px 16px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 업무 추가</button>
+                style={{ padding: '8px 16px', background: '#c4a882', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 업무 추가</button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: selectedProj ? '280px 1fr' : '1fr', gap: '16px' }}>
               {/* 왼쪽: 업무 목록 */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {projects.length === 0 && <p style={{ color: '#64748B', textAlign: 'center', padding: '40px 0' }}>업무를 추가해보세요</p>}
+                {projects.length === 0 && <p style={{ color: '#7a6e5e', textAlign: 'center', padding: '40px 0' }}>업무를 추가해보세요</p>}
                 {projects.map((proj, i) => {
                   const color = PROJ_COLORS[i % PROJ_COLORS.length];
                   const pt = boardItems.filter(x => x.프로젝트ID===proj.ID && x.유형==='태스크');
@@ -352,27 +352,27 @@ export default function Home() {
                   const isSelected = selectedProjId===proj.ID;
                   return (
                     <div key={proj.ID} onClick={() => setSelectedProjId(isSelected?null:proj.ID)}
-                      style={{ background: isSelected?'#1E3A5F':'#1E293B', borderRadius: '10px', padding: '12px 14px', cursor: 'pointer', border: `1px solid ${isSelected?'#3B82F6':color+'40'}`, transition: 'all 0.15s' }}>
+                      style={{ background: isSelected?'#e8f0fb':'#f2ede4', borderRadius: '10px', padding: '12px 14px', cursor: 'pointer', border: `1px solid ${isSelected?'#c4a882':color+'40'}`, transition: 'all 0.15s' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: color, flexShrink: 0 }} />
-                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#F1F5F9', flex: 1 }}>{proj.제목}</span>
+                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#2c2620', flex: 1 }}>{proj.제목}</span>
                         <select value={proj.상태} onClick={e => e.stopPropagation()} onChange={e => { e.stopPropagation(); handleStatusChange(proj, e.target.value); }}
-                          style={{ padding: '2px 6px', borderRadius: '6px', border: 'none', fontSize: '10px', fontWeight: 500, cursor: 'pointer', outline: 'none', flexShrink: 0, colorScheme: 'dark',
-                            background: proj.상태==='완료'?'#16532430':proj.상태==='진행중'?'#1E3A5F':'#334155',
-                            color: proj.상태==='완료'?'#22C55E':proj.상태==='진행중'?'#60A5FA':'#94A3B8' }}>
+                          style={{ padding: '2px 6px', borderRadius: '6px', border: 'none', fontSize: '10px', fontWeight: 500, cursor: 'pointer', outline: 'none', flexShrink: 0, colorScheme: 'light',
+                            background: proj.상태==='완료'?'#d4edda':proj.상태==='진행중'?'#e8f0fb':'#e0d8c8',
+                            color: proj.상태==='완료'?'#5a9a6e':proj.상태==='진행중'?'#a07850':'#9a8e7e' }}>
                           {['진행중','완료','보류','대기'].map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                       </div>
-                      {proj.설명 && <p style={{ fontSize: '11px', color: '#64748B', margin: '0 0 6px', paddingLeft: '16px' }}>{proj.설명}</p>}
+                      {proj.설명 && <p style={{ fontSize: '11px', color: '#7a6e5e', margin: '0 0 6px', paddingLeft: '16px' }}>{proj.설명}</p>}
                       <div style={{ paddingLeft: '16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                          <span style={{ fontSize: '10px', color: '#64748B' }}>{done}/{pt.length} 완료</span>
+                          <span style={{ fontSize: '10px', color: '#7a6e5e' }}>{done}/{pt.length} 완료</span>
                           <span style={{ fontSize: '10px', color, fontWeight: 600 }}>{pct}%</span>
                         </div>
-                        <div style={{ height: '3px', background: '#334155', borderRadius: '2px', overflow: 'hidden' }}>
+                        <div style={{ height: '3px', background: '#e0d8c8', borderRadius: '2px', overflow: 'hidden' }}>
                           <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '2px' }} />
                         </div>
-                        {(proj.시작일||proj.목표일) && <p style={{ fontSize: '10px', color: '#475569', margin: '4px 0 0' }}>{proj.시작일} ~ {proj.목표일}</p>}
+                        {(proj.시작일||proj.목표일) && <p style={{ fontSize: '10px', color: '#8a7e6e', margin: '4px 0 0' }}>{proj.시작일} ~ {proj.목표일}</p>}
                       </div>
                     </div>
                   );
@@ -381,67 +381,67 @@ export default function Home() {
 
               {/* 오른쪽: 체크리스트 */}
               {selectedProj && (
-                <div style={{ background: '#1E293B', borderRadius: '12px', padding: '20px', border: '1px solid #334155' }}>
+                <div style={{ background: '#f2ede4', borderRadius: '12px', padding: '20px', border: '1px solid #e0d8c8' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                     <div>
                       <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 4px' }}>{selectedProj.제목}</h3>
-                      {selectedProj.설명 && <p style={{ fontSize: '12px', color: '#64748B', margin: 0 }}>{selectedProj.설명}</p>}
+                      {selectedProj.설명 && <p style={{ fontSize: '12px', color: '#7a6e5e', margin: 0 }}>{selectedProj.설명}</p>}
                     </div>
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button onClick={() => { setEditItem(selectedProj); setForm({ ...selectedProj }); setShowModal(true); }}
-                        style={{ padding: '5px 10px', background: '#334155', border: 'none', borderRadius: '6px', color: '#94A3B8', fontSize: '12px', cursor: 'pointer' }}>수정</button>
+                        style={{ padding: '5px 10px', background: '#e0d8c8', border: 'none', borderRadius: '6px', color: '#9a8e7e', fontSize: '12px', cursor: 'pointer' }}>수정</button>
                       <button onClick={() => handleDelete(selectedProj)}
-                        style={{ padding: '5px 10px', background: '#7F1D1D', border: 'none', borderRadius: '6px', color: '#FCA5A5', fontSize: '12px', cursor: 'pointer' }}>삭제</button>
+                        style={{ padding: '5px 10px', background: '#fde8e8', border: 'none', borderRadius: '6px', color: '#c0392b', fontSize: '12px', cursor: 'pointer' }}>삭제</button>
                     </div>
                   </div>
 
                   {/* 진행률 */}
-                  <div style={{ marginBottom: '12px', padding: '10px 12px', background: '#0F172A', borderRadius: '8px' }}>
+                  <div style={{ marginBottom: '12px', padding: '10px 12px', background: '#faf8f4', borderRadius: '8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                      <span style={{ fontSize: '12px', color: '#64748B' }}>진행률</span>
-                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#3B82F6' }}>{progress}%</span>
+                      <span style={{ fontSize: '12px', color: '#7a6e5e' }}>진행률</span>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#c4a882' }}>{progress}%</span>
                     </div>
-                    <div style={{ height: '5px', background: '#334155', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${progress}%`, background: '#3B82F6', borderRadius: '3px', transition: 'width 0.3s' }} />
+                    <div style={{ height: '5px', background: '#e0d8c8', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${progress}%`, background: '#c4a882', borderRadius: '3px', transition: 'width 0.3s' }} />
                     </div>
-                    <p style={{ fontSize: '11px', color: '#475569', margin: '6px 0 0' }}>{projTasks.length}개 항목 · 완료 {completedCount}개</p>
+                    <p style={{ fontSize: '11px', color: '#8a7e6e', margin: '6px 0 0' }}>{projTasks.length}개 항목 · 완료 {completedCount}개</p>
                   </div>
 
                   {/* 그룹/태스크 추가 — 상단 고정 */}
-                  <div style={{ marginBottom: '12px', padding: '12px', background: '#0F172A', borderRadius: '8px', border: '1px solid #334155' }}>
+                  <div style={{ marginBottom: '12px', padding: '12px', background: '#faf8f4', borderRadius: '8px', border: '1px solid #e0d8c8' }}>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                       <input placeholder="그룹 추가... (예: A. 준비사항)" value={newGroupTitle} onChange={e => setNewGroupTitle(e.target.value)} onKeyDown={e => e.key==='Enter' && handleAddGroup()}
-                        style={{ flex: 1, padding: '7px 12px', background: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F1F5F9', fontSize: '12px', outline: 'none', colorScheme: 'dark' }} />
-                      <button onClick={handleAddGroup} style={{ padding: '7px 12px', background: '#334155', border: 'none', borderRadius: '8px', color: '#94A3B8', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>+ 그룹</button>
+                        style={{ flex: 1, padding: '7px 12px', background: '#f2ede4', border: '1px solid #e0d8c8', borderRadius: '8px', color: '#2c2620', fontSize: '12px', outline: 'none', colorScheme: 'light' }} />
+                      <button onClick={handleAddGroup} style={{ padding: '7px 12px', background: '#e0d8c8', border: 'none', borderRadius: '8px', color: '#9a8e7e', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>+ 그룹</button>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <input placeholder="태스크 추가..." value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} onKeyDown={e => e.key==='Enter' && handleAddTask()}
-                        style={{ flex: 1, padding: '7px 12px', background: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F1F5F9', fontSize: '12px', outline: 'none', colorScheme: 'dark' }} />
-                      <button onClick={handleAddTask} style={{ padding: '7px 14px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ 태스크</button>
+                        style={{ flex: 1, padding: '7px 12px', background: '#f2ede4', border: '1px solid #e0d8c8', borderRadius: '8px', color: '#2c2620', fontSize: '12px', outline: 'none', colorScheme: 'light' }} />
+                      <button onClick={handleAddTask} style={{ padding: '7px 14px', background: '#c4a882', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ 태스크</button>
                     </div>
                   </div>
 
                   {/* 체크리스트 */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {projItems.length === 0 && <p style={{ color: '#64748B', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>아래에서 그룹 또는 태스크를 추가해보세요</p>}
+                    {projItems.length === 0 && <p style={{ color: '#7a6e5e', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>아래에서 그룹 또는 태스크를 추가해보세요</p>}
                     {projItems.map(item => {
                       if (item.유형 === '그룹') return (
                         <div key={item.ID} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 4px', marginTop: '8px' }}>
-                          <span style={{ fontSize: '12px', fontWeight: 700, color: '#94A3B8', flex: 1 }}>{item.제목}</span>
-                          <button onClick={() => handleDelete(item)} style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: '12px' }}>🗑️</button>
+                          <span style={{ fontSize: '12px', fontWeight: 700, color: '#9a8e7e', flex: 1 }}>{item.제목}</span>
+                          <button onClick={() => handleDelete(item)} style={{ background: 'none', border: 'none', color: '#8a7e6e', cursor: 'pointer', fontSize: '12px' }}>🗑️</button>
                         </div>
                       );
                       const isDone = item.상태 === '완료';
                       return (
-                        <div key={item.ID} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: '#0F172A', borderRadius: '8px', border: `1px solid ${item.상태==='진행중'?'#3B82F6':isDone?'#0F172A':'#334155'}`, opacity: isDone?0.6:1 }}>
+                        <div key={item.ID} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: '#faf8f4', borderRadius: '8px', border: `1px solid ${item.상태==='진행중'?'#c4a882':isDone?'#faf8f4':'#e0d8c8'}`, opacity: isDone?0.6:1 }}>
                           <select value={item.상태} onChange={e => handleStatusChange(item, e.target.value)}
-                            style={{ padding: '2px 5px', borderRadius: '5px', border: 'none', fontSize: '10px', fontWeight: 500, cursor: 'pointer', outline: 'none', flexShrink: 0, colorScheme: 'dark',
-                              background: item.상태==='완료'?'#16532430':item.상태==='진행중'?'#1E3A5F':'#334155',
-                              color: item.상태==='완료'?'#22C55E':item.상태==='진행중'?'#60A5FA':'#94A3B8' }}>
+                            style={{ padding: '2px 5px', borderRadius: '5px', border: 'none', fontSize: '10px', fontWeight: 500, cursor: 'pointer', outline: 'none', flexShrink: 0, colorScheme: 'light',
+                              background: item.상태==='완료'?'#d4edda':item.상태==='진행중'?'#e8f0fb':'#e0d8c8',
+                              color: item.상태==='완료'?'#5a9a6e':item.상태==='진행중'?'#a07850':'#9a8e7e' }}>
                             {['대기','진행중','완료'].map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
-                          <span style={{ flex: 1, fontSize: '13px', color: isDone?'#64748B':'#F1F5F9', textDecoration: isDone?'line-through':'none' }}>{item.제목}</span>
-                          <button onClick={() => handleDelete(item)} style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: '13px', flexShrink: 0 }}>🗑️</button>
+                          <span style={{ flex: 1, fontSize: '13px', color: isDone?'#7a6e5e':'#2c2620', textDecoration: isDone?'line-through':'none' }}>{item.제목}</span>
+                          <button onClick={() => handleDelete(item)} style={{ background: 'none', border: 'none', color: '#8a7e6e', cursor: 'pointer', fontSize: '13px', flexShrink: 0 }}>🗑️</button>
                         </div>
                       );
                     })}
@@ -458,39 +458,39 @@ export default function Home() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>📝 메모</h2>
               <button onClick={() => { setEditItem(null); setForm({ 제목: '', 내용: '', 태그: '' }); setShowModal(true); }}
-                style={{ padding: '8px 16px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 추가</button>
+                style={{ padding: '8px 16px', background: '#c4a882', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>+ 추가</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: selectedMemo ? '280px 1fr' : '1fr', gap: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {memos.length === 0 && <p style={{ color: '#64748B', textAlign: 'center', padding: '40px 0' }}>메모를 추가해보세요</p>}
+                {memos.length === 0 && <p style={{ color: '#7a6e5e', textAlign: 'center', padding: '40px 0' }}>메모를 추가해보세요</p>}
                 {memos.map(memo => (
                   <div key={memo.ID} onClick={() => setSelectedMemo(memo)}
-                    style={{ background: selectedMemo?.ID===memo.ID?'#1E40AF':'#1E293B', borderRadius: '10px', padding: '12px 14px', cursor: 'pointer', border: `1px solid ${selectedMemo?.ID===memo.ID?'#3B82F6':'#334155'}` }}>
-                    <p style={{ fontSize: '14px', fontWeight: 500, margin: '0 0 4px', color: '#F1F5F9' }}>{memo.제목}</p>
-                    <p style={{ fontSize: '11px', color: '#94A3B8', margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memo.내용}</p>
+                    style={{ background: selectedMemo?.ID===memo.ID?'#dbeafe':'#f2ede4', borderRadius: '10px', padding: '12px 14px', cursor: 'pointer', border: `1px solid ${selectedMemo?.ID===memo.ID?'#c4a882':'#e0d8c8'}` }}>
+                    <p style={{ fontSize: '14px', fontWeight: 500, margin: '0 0 4px', color: '#2c2620' }}>{memo.제목}</p>
+                    <p style={{ fontSize: '11px', color: '#9a8e7e', margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memo.내용}</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '10px', color: '#64748B' }}>{memo.수정일}</span>
-                      {memo.태그 && <span style={{ fontSize: '10px', color: '#3B82F6' }}>#{memo.태그}</span>}
+                      <span style={{ fontSize: '10px', color: '#7a6e5e' }}>{memo.수정일}</span>
+                      {memo.태그 && <span style={{ fontSize: '10px', color: '#c4a882' }}>#{memo.태그}</span>}
                     </div>
                   </div>
                 ))}
               </div>
               {selectedMemo && (
-                <div style={{ background: '#1E293B', borderRadius: '12px', padding: '20px', border: '1px solid #334155' }}>
+                <div style={{ background: '#f2ede4', borderRadius: '12px', padding: '20px', border: '1px solid #e0d8c8' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                     <div>
                       <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>{selectedMemo.제목}</h3>
-                      <span style={{ fontSize: '11px', color: '#64748B' }}>{selectedMemo.수정일} 수정</span>
+                      <span style={{ fontSize: '11px', color: '#7a6e5e' }}>{selectedMemo.수정일} 수정</span>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={() => { setEditItem(selectedMemo); setForm({ ...selectedMemo }); setShowModal(true); }}
-                        style={{ padding: '6px 12px', background: '#334155', border: 'none', borderRadius: '6px', color: '#F1F5F9', fontSize: '12px', cursor: 'pointer' }}>수정</button>
+                        style={{ padding: '6px 12px', background: '#e0d8c8', border: 'none', borderRadius: '6px', color: '#2c2620', fontSize: '12px', cursor: 'pointer' }}>수정</button>
                       <button onClick={() => handleDelete(selectedMemo)}
-                        style={{ padding: '6px 12px', background: '#7F1D1D', border: 'none', borderRadius: '6px', color: '#FCA5A5', fontSize: '12px', cursor: 'pointer' }}>삭제</button>
+                        style={{ padding: '6px 12px', background: '#fde8e8', border: 'none', borderRadius: '6px', color: '#c0392b', fontSize: '12px', cursor: 'pointer' }}>삭제</button>
                     </div>
                   </div>
-                  <p style={{ fontSize: '14px', color: '#CBD5E1', lineHeight: '1.8', whiteSpace: 'pre-wrap', margin: 0 }}>{selectedMemo.내용}</p>
-                  {selectedMemo.태그 && <p style={{ marginTop: '16px', fontSize: '12px', color: '#3B82F6' }}>#{selectedMemo.태그}</p>}
+                  <p style={{ fontSize: '14px', color: '#5a4e3e', lineHeight: '1.8', whiteSpace: 'pre-wrap', margin: 0 }}>{selectedMemo.내용}</p>
+                  {selectedMemo.태그 && <p style={{ marginTop: '16px', fontSize: '12px', color: '#c4a882' }}>#{selectedMemo.태그}</p>}
                 </div>
               )}
             </div>
@@ -501,7 +501,7 @@ export default function Home() {
       {/* ── 모달 ── */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: '#1E293B', borderRadius: '16px', padding: '28px', width: '440px', maxWidth: '90vw', border: '1px solid #334155' }}>
+          <div style={{ background: '#f2ede4', borderRadius: '16px', padding: '28px', width: '440px', maxWidth: '90vw', border: '1px solid #e0d8c8' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 20px' }}>
               {editItem ? '수정' : '추가'} — {tab === 'memo' ? '메모' : '업무'}
             </h3>
@@ -527,8 +527,8 @@ export default function Home() {
               </div>
             )}
             <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-              <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', background: '#334155', border: 'none', borderRadius: '8px', color: '#94A3B8', fontSize: '13px', cursor: 'pointer' }}>취소</button>
-              <button onClick={handleSave} style={{ flex: 2, padding: '10px', background: '#3B82F6', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>저장</button>
+              <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', background: '#e0d8c8', border: 'none', borderRadius: '8px', color: '#9a8e7e', fontSize: '13px', cursor: 'pointer' }}>취소</button>
+              <button onClick={handleSave} style={{ flex: 2, padding: '10px', background: '#c4a882', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>저장</button>
             </div>
           </div>
         </div>
@@ -538,6 +538,6 @@ export default function Home() {
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', background: '#0F172A', border: '1px solid #334155',
-  borderRadius: '8px', color: '#F1F5F9', fontSize: '13px', outline: 'none', boxSizing: 'border-box', colorScheme: 'dark',
+  width: '100%', padding: '10px 12px', background: '#faf8f4', border: '1px solid #e0d8c8',
+  borderRadius: '8px', color: '#2c2620', fontSize: '13px', outline: 'none', boxSizing: 'border-box', colorScheme: 'light',
 };
