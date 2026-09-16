@@ -209,7 +209,7 @@ export default function Home() {
       </div>
 
       {/* 메인 콘텐츠 */}
-      <div style={{ flex: 1, padding: '32px', overflowY: 'auto', maxWidth: '900px' }}>
+      <div style={{ flex: 1, padding: '48px 40px', overflowY: 'auto' }}>
         {loading && <p style={{ color: '#7a6e5e', textAlign: 'center' }}>불러오는 중...</p>}
 
         {/* ── 홈 탭 ── */}
