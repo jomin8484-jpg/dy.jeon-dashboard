@@ -14,7 +14,7 @@ interface BoardItem {
   메모: string;
 }
 interface Memo {
-  ID: string; 제목: string; 내용: string; 태그: string; 생성일: string; 수정일: string;
+  ID: string; 미팅명: string; 날짜: string; 참석자: string; 내용: string; 액션아이템: string; 생성일: string; 수정일: string;
 }
 
 const PASSWORD = 'selvatico2026';
@@ -48,7 +48,7 @@ export default function Home() {
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [memoForm, setMemoForm] = useState({ 제목: '', 내용: '', 태그: '' });
+  const [memoForm, setMemoForm] = useState({ 미팅명: '', 날짜: '', 참석자: '', 내용: '', 액션아이템: '' });
   const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
   const [newGroupTitle, setNewGroupTitle] = useState('');
 
@@ -202,7 +202,7 @@ export default function Home() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
           {(['home', 'board', 'memo'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{ padding: '9px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: tab === t ? 600 : 400, textAlign: 'left', background: tab === t ? '#c4a882' : 'transparent', color: tab === t ? '#fff' : '#7a6e5e', transition: 'all 0.15s' }}>
-              {t === 'home' ? '🏠  홈' : t === 'board' ? '📋  업무보드' : '📝  메모'}
+              {t === 'home' ? '🏠  홈' : t === 'board' ? '📋  업무보드' : '📅  미팅'}
             </button>
           ))}
         </div>
@@ -515,7 +515,7 @@ export default function Home() {
                       <span style={{ fontSize: '11px', color: '#9a8e7e' }}>{selectedMemo.수정일} 수정</span>
                     </div>
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={() => { setMemoForm({ 제목: selectedMemo.제목, 내용: selectedMemo.내용, 태그: selectedMemo.태그 }); setEditingMemoId(selectedMemo.ID); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      <button onClick={() => { setMemoForm({ 미팅명: selectedMemo.미팅명, 날짜: selectedMemo.날짜, 참석자: selectedMemo.참석자, 내용: selectedMemo.내용, 액션아이템: selectedMemo.액션아이템 }); setEditingMemoId(selectedMemo.ID); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                         style={{ padding: '5px 10px', background: '#e0d8c8', border: 'none', borderRadius: '6px', color: '#2c2620', fontSize: '12px', cursor: 'pointer' }}>수정</button>
                       <button onClick={() => handleDelete(selectedMemo)}
                         style={{ padding: '5px 10px', background: '#fde8e8', border: 'none', borderRadius: '6px', color: '#c0392b', fontSize: '12px', cursor: 'pointer' }}>삭제</button>
