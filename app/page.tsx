@@ -453,13 +453,13 @@ export default function Home() {
           </>
         )}
 
-        {/* ── 메모 탭 ── */}
+        {/* ── 미팅 탭 ── */}
         {tab === 'memo' && (
           <>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 20px' }}>📝 메모</h2>
+            <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 20px' }}>📅 미팅</h2>
 
-            {/* 인라인 입력폼 */}
-            <div style={{ background: '#f2ede4', borderRadius: '12px', padding: '16px', border: `1px solid ${editingMemoId ? '#c4a882' : '#e0d8c8'}`, marginBottom: '20px' }}>
+            {/* 입력폼 */}
+            <div style={{ background: '#f2ede4', borderRadius: '12px', padding: '16px', border: `1px solid ${editingMemoId ? '#c4a882' : '#e0d8c8'}`, marginBottom: '24px' }}>
               {editingMemoId && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <span style={{ fontSize: '12px', fontWeight: 600, color: '#c4a882' }}>✏️ 수정 중</span>
@@ -467,7 +467,96 @@ export default function Home() {
                     style={{ fontSize: '11px', color: '#9a8e7e', background: 'none', border: 'none', cursor: 'pointer' }}>취소</button>
                 </div>
               )}
-      </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                <input placeholder="미팅명" value={memoForm.미팅명} onChange={e => setMemoForm({...memoForm, 미팅명: e.target.value})}
+                  style={{ padding: '8px 12px', background: '#faf8f4', border: '1px solid #e0d8c8', borderRadius: '8px', color: '#2c2620', fontSize: '13px', fontWeight: 500, outline: 'none' }} />
+                <input type="date" value={memoForm.날짜} onChange={e => setMemoForm({...memoForm, 날짜: e.target.value})}
+                  style={{ padding: '8px 12px', background: '#faf8f4', border: '1px solid #e0d8c8', borderRadius: '8px', color: '#2c2620', fontSize: '13px', outline: 'none', colorScheme: 'light' }} />
+              </div>
+              <input placeholder="참석자 (예: 전동열, 배형진 대표님)" value={memoForm.참석자} onChange={e => setMemoForm({...memoForm, 참석자: e.target.value})}
+                style={{ width: '100%', padding: '8px 12px', background: '#faf8f4', border: '1px solid #e0d8c8', borderRadius: '8px', color: '#2c2620', fontSize: '13px', outline: 'none', boxSizing: 'border-box', marginBottom: '8px' }} />
+              <textarea placeholder="미팅 내용 / 논의사항" value={memoForm.내용} onChange={e => setMemoForm({...memoForm, 내용: e.target.value})}
+                style={{ width: '100%', padding: '8px 12px', background: '#faf8f4', border: '1px solid #e0d8c8', borderRadius: '8px', color: '#2c2620', fontSize: '13px', outline: 'none', boxSizing: 'border-box', height: '100px', resize: 'vertical', marginBottom: '8px', lineHeight: '1.6' }} />
+              <textarea placeholder="액션아이템 (줄바꿈으로 구분, 업무보드로 전환할 내용)" value={memoForm.액션아이템} onChange={e => setMemoForm({...memoForm, 액션아이템: e.target.value})}
+                style={{ width: '100%', padding: '8px 12px', background: '#faf8f4', border: '1px solid #e0d8c8', borderRadius: '8px', color: '#2c2620', fontSize: '13px', outline: 'none', boxSizing: 'border-box', height: '80px', resize: 'vertical', marginBottom: '10px', lineHeight: '1.6' }} />
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button onClick={async () => {
+                  if (!memoForm.미팅명.trim()) return;
+                  const now = new Date().toISOString().slice(0,10);
+                  if (editingMemoId) {
+                    const target = memos.find(m => m.ID === editingMemoId);
+                    await fetch('/api/memo', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...target, ...memoForm, 수정일: now }) });
+                    setEditingMemoId(null);
+                  } else {
+                    await fetch('/api/memo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ID: nextId(memos), ...memoForm, 생성일: now, 수정일: now }) });
+                  }
+                  setMemoForm({ 미팅명: '', 날짜: '', 참석자: '', 내용: '', 액션아이템: '' });
+                  setSelectedMemo(null);
+                  const res = await fetch('/api/memo').then(r => r.json());
+                  setMemos(Array.isArray(res) ? res.filter((x: Memo) => x.ID) : []);
+                }} style={{ padding: '8px 20px', background: '#c4a882', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{editingMemoId ? '수정 완료' : '저장'}</button>
+              </div>
+            </div>
+
+            {/* 미팅 목록 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {memos.length === 0 && <p style={{ color: '#7a6e5e' }}>미팅 기록을 추가해보세요</p>}
+              {memos.map(memo => (
+                <div key={memo.ID} style={{ background: '#f2ede4', borderRadius: '12px', border: `1px solid ${selectedMemo?.ID===memo.ID ? '#c4a882' : '#e0d8c8'}`, overflow: 'hidden' }}>
+                  <div onClick={() => setSelectedMemo(selectedMemo?.ID===memo.ID ? null : memo)}
+                    style={{ padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: 600, color: '#2c2620', margin: '0 0 3px' }}>{memo.미팅명}</p>
+                      <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: '#9a8e7e' }}>
+                        {memo.날짜 && <span>📅 {memo.날짜}</span>}
+                        {memo.참석자 && <span>👥 {memo.참석자}</span>}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '12px', color: '#9a8e7e' }}>{selectedMemo?.ID===memo.ID ? '▲' : '▼'}</span>
+                  </div>
+                  {selectedMemo?.ID===memo.ID && (
+                    <div style={{ padding: '0 16px 16px', borderTop: '1px solid #e0d8c8' }}>
+                      {memo.내용 && (
+                        <div style={{ marginTop: '12px' }}>
+                          <p style={{ fontSize: '11px', fontWeight: 600, color: '#9a8e7e', margin: '0 0 6px' }}>📝 내용</p>
+                          <p style={{ fontSize: '13px', color: '#5a4e3e', lineHeight: '1.8', whiteSpace: 'pre-wrap', margin: 0 }}>{memo.내용}</p>
+                        </div>
+                      )}
+                      {memo.액션아이템 && (
+                        <div style={{ marginTop: '12px', padding: '12px', background: '#faf8f4', borderRadius: '8px', border: '1px solid #e0d8c8' }}>
+                          <p style={{ fontSize: '11px', fontWeight: 600, color: '#9a8e7e', margin: '0 0 6px' }}>✅ 액션아이템</p>
+                          <p style={{ fontSize: '13px', color: '#5a4e3e', lineHeight: '1.8', whiteSpace: 'pre-wrap', margin: 0 }}>{memo.액션아이템}</p>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '14px', justifyContent: 'flex-end' }}>
+                        {memo.액션아이템 && (
+                          <button onClick={async () => {
+                            const lines = memo.액션아이템.split('\n').filter((l: string) => l.trim());
+                            const projId = nextId(boardItems);
+                            await fetch('/api/project', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ID: projId, 프로젝트ID: '', 제목: memo.미팅명, 설명: `${memo.날짜} 미팅 후속`, 유형: '업무', 상태: '진행중', 시작일: memo.날짜||'', 목표일: '', 메모: '' }) });
+                            await loadBoard();
+                            const updated = await fetch('/api/project').then(r => r.json());
+                            let taskId = Number(nextId(updated));
+                            for (const line of lines) {
+                              await fetch('/api/project', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ID: String(taskId), 프로젝트ID: projId, 제목: line.trim().replace(/^[-•*]\s*/, ''), 설명: '', 유형: '태스크', 상태: '대기', 우선순위: '보통', 시작일: '', 목표일: '', 메모: '' }) });
+                              taskId++;
+                            }
+                            await loadBoard();
+                            alert(`"${memo.미팅명}" 업무가 업무보드에 추가됐어요!`);
+                          }} style={{ padding: '6px 14px', background: '#c4a882', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>📋 업무보드로 전환</button>
+                        )}
+                        <button onClick={() => { setMemoForm({ 미팅명: memo.미팅명, 날짜: memo.날짜, 참석자: memo.참석자, 내용: memo.내용, 액션아이템: memo.액션아이템 }); setEditingMemoId(memo.ID); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                          style={{ padding: '6px 12px', background: '#e0d8c8', border: 'none', borderRadius: '6px', color: '#2c2620', fontSize: '12px', cursor: 'pointer' }}>수정</button>
+                        <button onClick={() => handleDelete(memo)}
+                          style={{ padding: '6px 12px', background: '#fde8e8', border: 'none', borderRadius: '6px', color: '#c0392b', fontSize: '12px', cursor: 'pointer' }}>삭제</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
       {/* ── 모달 ── */}
       {showModal && (
