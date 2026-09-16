@@ -32,7 +32,7 @@ export default function Home() {
   const [auth, setAuth] = useState(false);
   const [pw, setPw] = useState('');
   const [pwError, setPwError] = useState(false);
-  const [tab, setTab] = useState<'board' | 'memo'>('board');
+  const [tab, setTab] = useState<'home' | 'board' | 'memo'>('home');
 
   // 데이터
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -172,13 +172,13 @@ export default function Home() {
             <span style={{ fontSize: '12px', color: '#64748B' }}>Workspace</span>
           </div>
           <div style={{ display: 'flex', gap: '4px' }}>
-            {(['board', 'memo'] as const).map(t => (
+            {(['home', 'board', 'memo'] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{
                 padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500,
                 background: tab === t ? '#3B82F6' : 'transparent',
                 color: tab === t ? '#fff' : '#94A3B8',
               }}>
-                {t === 'board' ? '📋 업무보드' : '📝 메모'}
+                {t === 'home' ? '🏠 홈' : t === 'board' ? '📋 업무보드' : '📝 메모'}
               </button>
             ))}
           </div>
@@ -238,6 +238,157 @@ export default function Home() {
         )}
 
         {/* ── 프로젝트 탭 ── */}
+        {/* ── 홈 탭 ── */}
+        {tab === 'home' && (() => {
+          const PROJ_COLORS = ['#3B82F6','#22C55E','#F59E0B','#EF4444','#A855F7','#06B6D4','#F97316'];
+          const calNow = new Date();
+          const firstDay = new Date(calYear, calMonth, 1).getDay();
+          const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+          const prevDays = new Date(calYear, calMonth, 0).getDate();
+          const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+          const today = new Date(calNow.getFullYear(), calNow.getMonth(), calNow.getDate()).toLocaleDateString('en-CA');
+
+          const cells: { date: string; day: number; current: boolean }[] = [];
+          for (let i = 0; i < totalCells; i++) {
+            if (i < firstDay) {
+              const d = prevDays - firstDay + i + 1;
+              const pm = calMonth === 0 ? 12 : calMonth;
+              const py = calMonth === 0 ? calYear - 1 : calYear;
+              cells.push({ date: `${py}-${String(pm).padStart(2,'0')}-${String(d).padStart(2,'0')}`, day: d, current: false });
+            } else if (i < firstDay + daysInMonth) {
+              const d = i - firstDay + 1;
+              cells.push({ date: `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`, day: d, current: true });
+            } else {
+              const d = i - firstDay - daysInMonth + 1;
+              const nm = calMonth === 11 ? 1 : calMonth + 2;
+              const ny = calMonth === 11 ? calYear + 1 : calYear;
+              cells.push({ date: `${ny}-${String(nm).padStart(2,'0')}-${String(d).padStart(2,'0')}`, day: d, current: false });
+            }
+          }
+
+          const rows: typeof cells[] = [];
+          for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i+7));
+
+          const monthStart = `${calYear}-${String(calMonth+1).padStart(2,'0')}-01`;
+          const monthEnd = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
+
+          const validProjs = projects
+            .map(p => ({ ...p, 시작일: toISO(p.시작일||''), 목표일: toISO(p.목표일||''), colorIndex: projects.findIndex(x => x.ID === p.ID) }))
+            .filter(p => p.시작일 && p.목표일 && p.시작일 <= monthEnd && p.목표일 >= monthStart);
+          const sorted = [...validProjs].sort((a,b) => a.시작일.localeCompare(b.시작일));
+          const tracks: string[][] = [];
+          const trackedProjs = sorted.map(proj => {
+            let t = 0;
+            while (tracks[t] && tracks[t].some(end => proj.시작일 <= end)) t++;
+            if (!tracks[t]) tracks[t] = [];
+            tracks[t].push(proj.목표일);
+            return { ...proj, track: t };
+          });
+
+          const TRACK_TOP = 28;
+          const TRACK_H = 20;
+          const TRACK_GAP = 3;
+
+          return (
+            <>
+              <p style={{ fontSize: '11px', color: '#64748B', letterSpacing: '0.08em', marginBottom: '4px' }}>HOME</p>
+              <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#F1F5F9', margin: '0 0 20px' }}>안녕하세요, 전동열 책임님 👋</h1>
+
+              <div style={{ border: '1px solid #334155', borderRadius: '12px', overflow: 'hidden', background: '#1E293B' }}>
+                {/* 달력 헤더 */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #334155' }}>
+                  <button onClick={() => { if (calMonth === 0) { setCalMonth(11); setCalYear((y:number) => y-1); } else setCalMonth((m:number) => m-1); }}
+                    style={{ background: '#334155', border: 'none', borderRadius: '6px', color: '#F1F5F9', width: '28px', height: '28px', cursor: 'pointer', fontSize: '14px' }}>‹</button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#F1F5F9' }}>{calYear}년 {calMonth+1}월</span>
+                    <button onClick={() => { setCalYear(new Date().getFullYear()); setCalMonth(new Date().getMonth()); }}
+                      style={{ background: '#334155', border: 'none', borderRadius: '6px', padding: '3px 10px', fontSize: '11px', color: '#94A3B8', cursor: 'pointer' }}>오늘</button>
+                  </div>
+                  <button onClick={() => { if (calMonth === 11) { setCalMonth(0); setCalYear((y:number) => y+1); } else setCalMonth((m:number) => m+1); }}
+                    style={{ background: '#334155', border: 'none', borderRadius: '6px', color: '#F1F5F9', width: '28px', height: '28px', cursor: 'pointer', fontSize: '14px' }}>›</button>
+                </div>
+                {/* 요일 헤더 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', background: '#0F172A', borderBottom: '1px solid #334155' }}>
+                  {['일','월','화','수','목','금','토'].map((d,i) => (
+                    <div key={d} style={{ textAlign: 'center', padding: '6px 0', fontSize: '11px', fontWeight: 500, color: i===0 ? '#EF4444' : i===6 ? '#60A5FA' : '#64748B' }}>{d}</div>
+                  ))}
+                </div>
+                {/* 달력 바디 */}
+                {rows.map((week, ri) => {
+                  const weekProjs = trackedProjs.filter(p => week.some(c => c.date >= p.시작일 && c.date <= p.목표일));
+                  const maxTrack = weekProjs.length > 0 ? Math.max(...weekProjs.map(p => p.track)) : -1;
+                  const rowH = TRACK_TOP + (maxTrack + 1) * (TRACK_H + TRACK_GAP) + 8;
+                  return (
+                    <div key={ri} style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderBottom: ri < rows.length-1 ? '1px solid #334155' : 'none', position: 'relative', minHeight: `${Math.max(rowH, 72)}px` }}>
+                      {week.map((cell, ci) => (
+                        <div key={ci} style={{ borderRight: ci < 6 ? '1px solid #334155' : 'none', padding: '4px 3px', background: cell.current ? '#1E293B' : '#0F172A', minHeight: '72px' }}>
+                          <div style={{ fontSize: '11px', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%',
+                            background: cell.date === today ? '#3B82F6' : 'transparent',
+                            color: cell.date === today ? '#fff' : !cell.current ? '#475569' : ci===0 ? '#EF4444' : ci===6 ? '#60A5FA' : '#94A3B8',
+                            fontWeight: cell.date === today ? 700 : 400 }}>{cell.day}</div>
+                        </div>
+                      ))}
+                      {trackedProjs.map((proj) => {
+                        const rowStart = week[0].date;
+                        const rowEnd = week[6].date;
+                        if (proj.시작일 > rowEnd || proj.목표일 < rowStart) return null;
+                        const barStart = proj.시작일 > rowStart ? proj.시작일 : rowStart;
+                        const barEnd = proj.목표일 < rowEnd ? proj.목표일 : rowEnd;
+                        const si = week.findIndex(c => c.date === barStart);
+                        const ei = week.findIndex(c => c.date === barEnd);
+                        if (si < 0 || ei < 0) return null;
+                        const span = ei - si + 1;
+                        const isFirst = proj.시작일 === barStart;
+                        const isLast = proj.목표일 === barEnd;
+                        const color = PROJ_COLORS[(proj as any).colorIndex % PROJ_COLORS.length];
+                        const isHovered = hoveredProj === proj.ID;
+                        const isDimmed = hoveredProj !== null && !isHovered;
+                        return (
+                          <div key={`${proj.ID}-${ri}`}
+                            onMouseEnter={() => setHoveredProj(proj.ID)}
+                            onMouseLeave={() => setHoveredProj(null)}
+                            style={{
+                              position: 'absolute',
+                              top: `${TRACK_TOP + proj.track * (TRACK_H + TRACK_GAP)}px`,
+                              left: `calc(${si * (100/7)}% + 2px)`,
+                              width: `calc(${span * (100/7)}% - 4px)`,
+                              height: `${TRACK_H}px`,
+                              background: color + '33',
+                              borderTop: `2px solid ${color}`,
+                              borderBottom: `2px solid ${color}`,
+                              borderLeft: isFirst ? `2px solid ${color}` : 'none',
+                              borderRight: isLast ? `2px solid ${color}` : 'none',
+                              borderRadius: isFirst && isLast ? '4px' : isFirst ? '4px 0 0 4px' : isLast ? '0 4px 4px 0' : '0',
+                              display: 'flex', alignItems: 'center', paddingLeft: isFirst ? '6px' : '2px',
+                              overflow: 'hidden', boxSizing: 'border-box', cursor: 'pointer',
+                              opacity: isDimmed ? 0.2 : 1,
+                              filter: isHovered ? 'brightness(1.2)' : 'none',
+                              transition: 'opacity 0.15s, filter 0.15s',
+                              zIndex: isHovered ? 10 : 1,
+                            }}>
+                            {isFirst && <span style={{ fontSize: '10px', fontWeight: 500, color, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{proj.프로젝트명}</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+                {/* 범례 */}
+                {projects.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', padding: '10px 16px', borderTop: '1px solid #334155' }}>
+                    {projects.map((p, i) => (
+                      <div key={p.ID} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: PROJ_COLORS[i % PROJ_COLORS.length] }} />
+                        <span style={{ fontSize: '11px', color: '#94A3B8' }}>{p.프로젝트명}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          );
+        })()}
+
         {tab === 'board' && (() => {
           const PROJ_COLORS = ['#3B82F6','#22C55E','#F59E0B','#EF4444','#A855F7','#06B6D4','#F97316'];
           const selectedProj = selectedProjId ? projects.find(p => p.ID === selectedProjId) : null;
