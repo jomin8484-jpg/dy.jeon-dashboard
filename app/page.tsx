@@ -49,6 +49,7 @@ export default function Home() {
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [memoForm, setMemoForm] = useState({ 제목: '', 내용: '', 태그: '' });
+  const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
   const [newGroupTitle, setNewGroupTitle] = useState('');
 
   const [showModal, setShowModal] = useState(false);
@@ -458,7 +459,14 @@ export default function Home() {
             <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 20px' }}>📝 메모</h2>
 
             {/* 인라인 입력폼 */}
-            <div style={{ background: '#f2ede4', borderRadius: '12px', padding: '16px', border: '1px solid #e0d8c8', marginBottom: '20px' }}>
+            <div style={{ background: '#f2ede4', borderRadius: '12px', padding: '16px', border: `1px solid ${editingMemoId ? '#c4a882' : '#e0d8c8'}`, marginBottom: '20px' }}>
+              {editingMemoId && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#c4a882' }}>✏️ 수정 중</span>
+                  <button onClick={() => { setMemoForm({ 제목: '', 내용: '', 태그: '' }); setEditingMemoId(null); }}
+                    style={{ fontSize: '11px', color: '#9a8e7e', background: 'none', border: 'none', cursor: 'pointer' }}>취소</button>
+                </div>
+              )}
               <input placeholder="제목" value={memoForm.제목} onChange={e => setMemoForm({...memoForm, 제목: e.target.value})}
                 style={{ width: '100%', padding: '8px 12px', background: '#faf8f4', border: '1px solid #e0d8c8', borderRadius: '8px', color: '#2c2620', fontSize: '14px', fontWeight: 500, outline: 'none', boxSizing: 'border-box', marginBottom: '8px' }} />
               <textarea placeholder="내용을 입력하세요..." value={memoForm.내용} onChange={e => setMemoForm({...memoForm, 내용: e.target.value})}
@@ -469,11 +477,18 @@ export default function Home() {
                 <button onClick={async () => {
                   if (!memoForm.제목.trim()) return;
                   const now = new Date().toISOString().slice(0,10);
-                  await fetch('/api/memo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ID: nextId(memos), 제목: memoForm.제목, 내용: memoForm.내용, 태그: memoForm.태그, 생성일: now, 수정일: now }) });
+                  if (editingMemoId) {
+                    const target = memos.find(m => m.ID === editingMemoId);
+                    await fetch('/api/memo', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...target, 제목: memoForm.제목, 내용: memoForm.내용, 태그: memoForm.태그, 수정일: now }) });
+                    setEditingMemoId(null);
+                  } else {
+                    await fetch('/api/memo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ID: nextId(memos), 제목: memoForm.제목, 내용: memoForm.내용, 태그: memoForm.태그, 생성일: now, 수정일: now }) });
+                  }
                   setMemoForm({ 제목: '', 내용: '', 태그: '' });
+                  setSelectedMemo(null);
                   const res = await fetch('/api/memo').then(r => r.json());
                   setMemos(Array.isArray(res) ? res.filter((x: Memo) => x.ID) : []);
-                }} style={{ padding: '7px 18px', background: '#c4a882', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>저장</button>
+                }} style={{ padding: '7px 18px', background: '#c4a882', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{editingMemoId ? '수정 완료' : '저장'}</button>
               </div>
             </div>
 
@@ -500,7 +515,7 @@ export default function Home() {
                       <span style={{ fontSize: '11px', color: '#9a8e7e' }}>{selectedMemo.수정일} 수정</span>
                     </div>
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={() => { setEditItem(selectedMemo); setForm({...selectedMemo}); setShowModal(true); }}
+                      <button onClick={() => { setMemoForm({ 제목: selectedMemo.제목, 내용: selectedMemo.내용, 태그: selectedMemo.태그 }); setEditingMemoId(selectedMemo.ID); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                         style={{ padding: '5px 10px', background: '#e0d8c8', border: 'none', borderRadius: '6px', color: '#2c2620', fontSize: '12px', cursor: 'pointer' }}>수정</button>
                       <button onClick={() => handleDelete(selectedMemo)}
                         style={{ padding: '5px 10px', background: '#fde8e8', border: 'none', borderRadius: '6px', color: '#c0392b', fontSize: '12px', cursor: 'pointer' }}>삭제</button>
