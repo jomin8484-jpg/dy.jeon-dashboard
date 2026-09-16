@@ -395,6 +395,18 @@ export default function Home() {
                     </div>
                   </div>
 
+                  {/* 진행률 */}
+                  <div style={{ marginBottom: '12px', padding: '10px 12px', background: '#0F172A', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                      <span style={{ fontSize: '12px', color: '#64748B' }}>진행률</span>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#3B82F6' }}>{progress}%</span>
+                    </div>
+                    <div style={{ height: '5px', background: '#334155', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${progress}%`, background: '#3B82F6', borderRadius: '3px', transition: 'width 0.3s' }} />
+                    </div>
+                    <p style={{ fontSize: '11px', color: '#475569', margin: '6px 0 0' }}>{projTasks.length}개 항목 · 완료 {completedCount}개</p>
+                  </div>
+
                   {/* 그룹/태스크 추가 — 상단 고정 */}
                   <div style={{ marginBottom: '12px', padding: '12px', background: '#0F172A', borderRadius: '8px', border: '1px solid #334155' }}>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
@@ -409,20 +421,8 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* 진행률 */}
-                  <div style={{ marginBottom: '12px', padding: '10px 12px', background: '#0F172A', borderRadius: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                      <span style={{ fontSize: '12px', color: '#64748B' }}>진행률</span>
-                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#3B82F6' }}>{progress}%</span>
-                    </div>
-                    <div style={{ height: '5px', background: '#334155', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${progress}%`, background: '#3B82F6', borderRadius: '3px', transition: 'width 0.3s' }} />
-                    </div>
-                    <p style={{ fontSize: '11px', color: '#475569', margin: '6px 0 0' }}>{projTasks.length}개 항목 · 완료 {completedCount}개</p>
-                  </div>
-
-                  {/* 체크리스트 — 스크롤 */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '50vh', overflowY: 'auto', paddingRight: '4px' }}>
+                  {/* 체크리스트 */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     {projItems.length === 0 && <p style={{ color: '#64748B', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>아래에서 그룹 또는 태스크를 추가해보세요</p>}
                     {projItems.map(item => {
                       if (item.유형 === '그룹') return (
