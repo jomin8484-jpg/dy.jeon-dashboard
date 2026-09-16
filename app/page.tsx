@@ -507,6 +507,7 @@ export default function Home() {
               </div>
             </>
           );
+        })()}
       </div>
 
       {/* ── 모달 ── */}
