@@ -467,8 +467,7 @@ export default function Home() {
                         </div>
                       )}
                       <div style={{ display:'flex', gap:'8px', marginTop:'14px', justifyContent:'flex-end' }}>
-                        {memo.액션아이템 && (
-                          <button onClick={async()=>{
+                        <button onClick={async()=>{
                             if (!memo.액션아이템.trim()) { alert('액션아이템을 먼저 입력해주세요.'); return; }
                             const lines=memo.액션아이템.split('\n').filter((l:string)=>l.trim());
                             // 현재 최대 ID 가져오기
@@ -484,8 +483,7 @@ export default function Home() {
                             }
                             await loadBoard();
                             alert(`"${memo.미팅명}" 업무와 태스크 ${lines.length}개가 업무보드에 추가됐어요!`);
-                          }} style={{ padding:'6px 14px', background:'#c4a882', border:'none', borderRadius:'6px', color:'#fff', fontSize:'12px', fontWeight:600, cursor:'pointer' }}>📋 업무보드로 전환</button>
-                        )}
+                        }} style={{ padding:'6px 14px', background:'#c4a882', border:'none', borderRadius:'6px', color:'#fff', fontSize:'12px', fontWeight:600, cursor:'pointer' }}>📋 업무보드로 전환</button>
                         <button onClick={async()=>{
                             const newStatus = memo.상태==='보관' ? '일반' : '보관';
                             await fetch('/api/memo',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...memo,상태:newStatus,수정일:new Date().toISOString().slice(0,10)})});
