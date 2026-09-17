@@ -12,14 +12,14 @@ const auth = new google.auth.GoogleAuth({
 const SHEET_ID = process.env.SHEET_ID;
 const SHEET_NAME = '메모';
 
-// ID | 미팅명 | 날짜 | 참석자 | 내용 | 액션아이템 | 생성일 | 수정일
+// ID | 미팅명 | 날짜 | 참석자 | 내용 | 액션아이템 | 상태 | 생성일 | 수정일
 
 export async function GET() {
   try {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A:H`,
+      range: `${SHEET_NAME}!A:I`,
     });
     const rows = res.data.values || [];
     if (rows.length < 2) return NextResponse.json([]);
@@ -44,10 +44,10 @@ export async function POST(req: Request) {
     const now = new Date().toISOString().slice(0, 10);
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A:H`,
+      range: `${SHEET_NAME}!A:I`,
       valueInputOption: 'RAW',
       requestBody: {
-        values: [[body.ID, body.미팅명, body.날짜||'', body.참석자||'', body.내용||'', body.액션아이템||'', now, now]],
+        values: [[body.ID, body.미팅명, body.날짜||'', body.참석자||'', body.내용||'', body.액션아이템||'', body.상태||'일반', now, now]],
       },
     });
     return NextResponse.json({ success: true });
@@ -62,7 +62,7 @@ export async function PUT(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A:H`,
+      range: `${SHEET_NAME}!A:I`,
     });
     const rows = res.data.values || [];
     const rowIndex = rows.findIndex(r => r[0] === String(body.ID));
@@ -70,10 +70,10 @@ export async function PUT(req: Request) {
     const now = new Date().toISOString().slice(0, 10);
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A${rowIndex + 1}:H${rowIndex + 1}`,
+      range: `${SHEET_NAME}!A${rowIndex + 1}:I${rowIndex + 1}`,
       valueInputOption: 'RAW',
       requestBody: {
-        values: [[body.ID, body.미팅명, body.날짜||'', body.참석자||'', body.내용||'', body.액션아이템||'', rows[rowIndex][6]||now, now]],
+        values: [[body.ID, body.미팅명, body.날짜||'', body.참석자||'', body.내용||'', body.액션아이템||'', body.상태||'일반', rows[rowIndex][7]||now, now]],
       },
     });
     return NextResponse.json({ success: true });
@@ -88,16 +88,16 @@ export async function DELETE(req: Request) {
     const sheets = google.sheets({ version: 'v4', auth });
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A:H`,
+      range: `${SHEET_NAME}!A:I`,
     });
     const rows = res.data.values || [];
     const rowIndex = rows.findIndex(r => r[0] === String(ID));
     if (rowIndex === -1) return NextResponse.json({ error: '항목 없음' }, { status: 404 });
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A${rowIndex + 1}:H${rowIndex + 1}`,
+      range: `${SHEET_NAME}!A${rowIndex + 1}:I${rowIndex + 1}`,
       valueInputOption: 'RAW',
-      requestBody: { values: [['', '', '', '', '', '', '', '']] },
+      requestBody: { values: [['', '', '', '', '', '', '', '', '']] },
     });
     return NextResponse.json({ success: true });
   } catch (e: any) {
