@@ -58,7 +58,14 @@ export default function Home() {
 
   const loadBoard = async () => {
     const res = await fetch('/api/project').then(r => r.json());
-    setBoardItems(Array.isArray(res) ? res.filter((x:BoardItem)=>x.ID).map((x:BoardItem)=>({...x, 시작일:toISO(x.시작일||''), 목표일:toISO(x.목표일||'')})) : []);
+    const items = Array.isArray(res) ? res.filter((x:BoardItem)=>x.ID).map((x:BoardItem)=>({...x, 시작일:toISO(x.시작일||''), 목표일:toISO(x.목표일||'')})) : [];
+    setBoardItems(items);
+    // 선택된 업무 없으면 첫 번째 업무 자동 선택
+    setSelectedProjId(prev => {
+      if (prev) return prev;
+      const first = items.find(x => x.유형 === '업무');
+      return first ? first.ID : null;
+    });
   };
 
   const handleDrop = (targetId: string) => {
@@ -90,7 +97,13 @@ export default function Home() {
     setLoading(true);
     Promise.all([fetch('/api/project').then(r=>r.json()), fetch('/api/memo').then(r=>r.json())])
       .then(([b,m]) => {
-        setBoardItems(Array.isArray(b) ? b.filter((x:BoardItem)=>x.ID).map((x:BoardItem)=>({...x, 시작일:toISO(x.시작일||''), 목표일:toISO(x.목표일||'')})) : []);
+        const items = Array.isArray(b) ? b.filter((x:BoardItem)=>x.ID).map((x:BoardItem)=>({...x, 시작일:toISO(x.시작일||''), 목표일:toISO(x.목표일||'')})) : [];
+        setBoardItems(items);
+        setSelectedProjId(prev => {
+          if (prev) return prev;
+          const first = items.find((x:BoardItem) => x.유형 === '업무');
+          return first ? first.ID : null;
+        });
         setMemos(Array.isArray(m) ? m.filter((x:Memo)=>x.ID) : []);
       }).finally(()=>setLoading(false));
   }, [auth]);
@@ -340,7 +353,7 @@ export default function Home() {
                       onDragLeave={()=>setDragOverId(null)}
                       onDrop={()=>handleDrop(proj.ID)}
                       onClick={()=>setSelectedProjId(isSelected?null:proj.ID)}
-                      style={{ background:isSelected?'#e8e0d0':'#f2ede4', borderRadius:'10px', padding:'12px 14px', cursor:'pointer', border:`2px solid ${dragOverId===proj.ID?'#c4a882':isSelected?'#c4a882':color+'40'}`, transition:'border-color 0.15s', userSelect:'none' }}>
+                      style={{ background:isSelected?'#e8e0d0':'#f2ede4', borderRadius:'10px', padding:'12px 14px', cursor:'pointer', border:`2px solid ${dragOverId===proj.ID?'#c4a882':isSelected?'#c4a882':color+'40'}`, transition:'border-color 0.15s', userSelect:'none', opacity:proj.상태==='완료'?0.5:1 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'4px' }}>
                         <span
                           draggable
@@ -349,7 +362,7 @@ export default function Home() {
                           style={{ color:'#c0b0a0', fontSize:'14px', cursor:'grab', flexShrink:0, padding:'0 2px', lineHeight:1 }}
                           title="드래그하여 순서 변경">⠿</span>
                         <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:color, flexShrink:0 }} />
-                        <span style={{ fontSize:'13px', fontWeight:600, color:'#2c2620', flex:1 }}>{proj.제목}</span>
+                        <span style={{ fontSize:'13px', fontWeight:600, color:proj.상태==='완료'?'#9a8e7e':'#2c2620', flex:1, textDecoration:proj.상태==='완료'?'line-through':'none' }}>{proj.제목}</span>
                         <select value={proj.상태} onClick={e=>e.stopPropagation()} onChange={e=>{ e.stopPropagation(); handleStatusChange(proj,e.target.value); }}
                           style={{ padding:'2px 6px', borderRadius:'6px', border:'none', fontSize:'10px', fontWeight:500, cursor:'pointer', outline:'none', flexShrink:0,
                             background:proj.상태==='완료'?'#d4edda':proj.상태==='진행중'?'#dbeafe':'#f0ece4',
@@ -374,7 +387,7 @@ export default function Home() {
               </div>
 
               {/* 오른쪽 체크리스트 */}
-              {selectedProj && (
+              {selectedProj ? (
                 <div style={{ background:'#f2ede4', borderRadius:'12px', padding:'20px', border:'1px solid #e0d8c8' }}>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'12px' }}>
                     <div>
@@ -461,6 +474,10 @@ export default function Home() {
                       );
                     })}
                   </div>
+                </div>
+              ) : (
+                <div style={{ background:'#f2ede4', borderRadius:'12px', padding:'40px 20px', border:'1px solid #e0d8c8', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <p style={{ color:'#9a8e7e', fontSize:'14px', textAlign:'center', margin:0 }}>← 왼쪽에서 업무를 선택하세요</p>
                 </div>
               )}
             </div>
