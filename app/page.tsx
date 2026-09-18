@@ -314,13 +314,17 @@ export default function Home() {
               {showAlarm && (
                 <div style={{ background:'#fffdf5', borderTop:`1px solid ${urgent[0].dday<=1?'#f5c6cb':urgent[0].dday<=3?'#ffd8a8':'#fff3cd'}` }}>
                   {urgent.map(p => (
-                    <div key={p.ID} style={{ display:'flex', alignItems:'center', gap:'10px', padding:'9px 14px', borderBottom:'1px solid #f0ece4' }}>
+                    <div key={p.ID} onClick={()=>{ setTab('board'); setSelectedProjId(p.ID); setShowAlarm(false); }}
+                      style={{ display:'flex', alignItems:'center', gap:'10px', padding:'9px 14px', borderBottom:'1px solid #f0ece4', cursor:'pointer' }}
+                      onMouseEnter={e=>(e.currentTarget.style.background='#f5f0e8')}
+                      onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
                       <span style={{ fontSize:'13px' }}>{getEmoji(p.dday)}</span>
                       <span style={{ fontSize:'13px', color:'#2c2620', flex:1 }}>{p.제목}</span>
                       <span style={{ fontSize:'12px', fontWeight:700, color:getColor(p.dday), flexShrink:0 }}>
                         {p.dday===0 ? 'D-Day' : `D-${p.dday}`}
                       </span>
                       <span style={{ fontSize:'11px', color:'#9a8e7e', flexShrink:0 }}>{p.목표일}</span>
+                      <span style={{ fontSize:'11px', color:'#c4a882', flexShrink:0 }}>→</span>
                     </div>
                   ))}
                 </div>
