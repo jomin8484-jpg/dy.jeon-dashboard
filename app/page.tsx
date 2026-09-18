@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 interface BoardItem {
   ID: string; 프로젝트ID: string; 제목: string; 설명: string;
@@ -45,9 +45,7 @@ export default function Home() {
   const [editingItem, setEditingItem] = useState<BoardItem|null>(null);
   const [showAlarm, setShowAlarm] = useState(false);
   const [editingTitle, setEditingTitle] = useState('');
-  const [dragOverId, setDragOverId] = useState<string|null>(null);
-  const dragItemId = React.useRef<string|null>(null);
-  const [projOrder, setProjOrder] = useState<string[]>(() => { try { const s = localStorage.getItem('pd_proj_order'); return s ? JSON.parse(s) : []; } catch { return []; } });
+
   const [newGroupTitle, setNewGroupTitle] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
@@ -69,29 +67,7 @@ export default function Home() {
     });
   };
 
-  const handleDrop = (targetId: string) => {
-    const fromId = dragItemId.current;
-    dragItemId.current = null;
-    setDragOverId(null);
-    if (!fromId || fromId === targetId) return;
-    // 현재 화면에 보이는 정렬된 순서 기준으로 재정렬
-    const projs = (() => {
-      const raw = boardItems.filter(x => x.유형 === '업무');
-      const order = projOrder;
-      return order.length > 0
-        ? [...raw].sort((a,b) => { const ai=order.indexOf(a.ID); const bi=order.indexOf(b.ID); if(ai===-1&&bi===-1)return 0; if(ai===-1)return 1; if(bi===-1)return -1; return ai-bi; })
-        : raw;
-    })();
-    const fromIdx = projs.findIndex(p => p.ID === fromId);
-    const toIdx = projs.findIndex(p => p.ID === targetId);
-    if (fromIdx < 0 || toIdx < 0) return;
-    const reordered = [...projs];
-    const [moved] = reordered.splice(fromIdx, 1);
-    reordered.splice(toIdx, 0, moved);
-    const newOrder = reordered.map(p => p.ID);
-    setProjOrder(newOrder);
-    try { localStorage.setItem('pd_proj_order', JSON.stringify(newOrder)); } catch {}
-  };
+
 
   useEffect(() => {
     if (!auth) return;
@@ -190,20 +166,16 @@ export default function Home() {
 
   const projectsRaw = boardItems.filter(x=>x.유형==='업무');
   const projects = (() => {
-    const sorted = projOrder.length > 0
-      ? [...projectsRaw].sort((a,b) => {
-          const ai = projOrder.indexOf(a.ID);
-          const bi = projOrder.indexOf(b.ID);
-          if (ai === -1 && bi === -1) return 0;
-          if (ai === -1) return 1;
-          if (bi === -1) return -1;
-          return ai - bi;
-        })
-      : projectsRaw;
-    // 완료 업무는 맨 하단 고정
-    const active = sorted.filter(p => p.상태 !== '완료');
-    const done = sorted.filter(p => p.상태 === '완료');
-    return [...active, ...done];
+    const active = projectsRaw.filter(p => p.상태 !== '완료');
+    const done = projectsRaw.filter(p => p.상태 === '완료');
+    // 활성 업무: 목표일 오름차순 (임박 순), 목표일 없으면 뒤로
+    const sortedActive = [...active].sort((a,b) => {
+      if (!a.목표일 && !b.목표일) return 0;
+      if (!a.목표일) return 1;
+      if (!b.목표일) return -1;
+      return a.목표일.localeCompare(b.목표일);
+    });
+    return [...sortedActive, ...done];
   })();
   const selectedProj = selectedProjId ? projects.find(p=>p.ID===selectedProjId) : null;
   const projItems = selectedProjId ? boardItems.filter(x=>x.프로젝트ID===selectedProjId) : [];
@@ -423,18 +395,10 @@ export default function Home() {
                   const isSelected=selectedProjId===proj.ID;
                   return (
                     <div key={proj.ID}
-                      onDragOver={e=>{ e.preventDefault(); setDragOverId(proj.ID); }}
-                      onDragLeave={()=>setDragOverId(null)}
-                      onDrop={()=>handleDrop(proj.ID)}
                       onClick={()=>setSelectedProjId(proj.ID)}
-                      style={{ background:isSelected?'#e8e0d0':'#f2ede4', borderRadius:'10px', padding:'12px 14px', cursor:'pointer', border:`2px solid ${dragOverId===proj.ID?'#c4a882':isSelected?'#c4a882':color+'40'}`, transition:'border-color 0.15s', userSelect:'none', opacity:proj.상태==='완료'?0.5:1 }}>
+                      style={{ background:isSelected?'#e8e0d0':'#f2ede4', borderRadius:'10px', padding:'12px 14px', cursor:'pointer', border:`2px solid ${isSelected?'#c4a882':color+'40'}`, transition:'border-color 0.15s', opacity:proj.상태==='완료'?0.5:1 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'4px' }}>
-                        <span
-                          draggable
-                          onDragStart={e=>{ e.stopPropagation(); dragItemId.current=proj.ID; }}
-                          onDragEnd={()=>{ dragItemId.current=null; setDragOverId(null); }}
-                          style={{ color:'#c0b0a0', fontSize:'14px', cursor:'grab', flexShrink:0, padding:'0 2px', lineHeight:1 }}
-                          title="드래그하여 순서 변경">⠿</span>
+
                         <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:color, flexShrink:0 }} />
                         <span style={{ fontSize:'13px', fontWeight:600, color:proj.상태==='완료'?'#9a8e7e':'#2c2620', flex:1, textDecoration:proj.상태==='완료'?'line-through':'none' }}>{proj.제목}</span>
                         <select value={proj.상태} onClick={e=>e.stopPropagation()} onChange={e=>{ e.stopPropagation(); handleStatusChange(proj,e.target.value); }}
