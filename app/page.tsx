@@ -323,16 +323,18 @@ export default function Home() {
                   const isSelected=selectedProjId===proj.ID;
                   return (
                     <div key={proj.ID}
-                      draggable
-                      onDragStart={()=>{ dragItemId.current=proj.ID; }}
                       onDragOver={e=>{ e.preventDefault(); setDragOverId(proj.ID); }}
                       onDragLeave={()=>setDragOverId(null)}
                       onDrop={()=>handleDrop(proj.ID)}
                       onDragEnd={()=>{ setDragOverId(null); dragItemId.current=null; }}
                       onClick={()=>setSelectedProjId(isSelected?null:proj.ID)}
-                      style={{ background:isSelected?'#e8e0d0':'#f2ede4', borderRadius:'10px', padding:'12px 14px', cursor:'grab', border:`2px solid ${dragOverId===proj.ID?'#c4a882':isSelected?'#c4a882':color+'40'}`, transition:'all 0.15s', opacity:dragItemId.current===proj.ID?0.5:1, transform:dragOverId===proj.ID?'scale(1.01)':'scale(1)' }}>
+                      style={{ background:isSelected?'#e8e0d0':'#f2ede4', borderRadius:'10px', padding:'12px 14px', cursor:'pointer', border:`2px solid ${dragOverId===proj.ID?'#c4a882':isSelected?'#c4a882':color+'40'}`, transition:'all 0.15s', userSelect:'none' }}>
                       <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'4px' }}>
-                        <span style={{ color:'#c0b0a0', fontSize:'12px', cursor:'grab', flexShrink:0 }}>⠿</span>
+                        <span
+                          draggable
+                          onDragStart={e=>{ e.stopPropagation(); dragItemId.current=proj.ID; }}
+                          style={{ color:'#c0b0a0', fontSize:'14px', cursor:'grab', flexShrink:0, padding:'0 2px', lineHeight:1 }}
+                          title="드래그하여 순서 변경">⠿</span>
                         <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:color, flexShrink:0 }} />
                         <span style={{ fontSize:'13px', fontWeight:600, color:'#2c2620', flex:1 }}>{proj.제목}</span>
                         <select value={proj.상태} onClick={e=>e.stopPropagation()} onChange={e=>{ e.stopPropagation(); handleStatusChange(proj,e.target.value); }}
