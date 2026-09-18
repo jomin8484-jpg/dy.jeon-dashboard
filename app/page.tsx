@@ -43,6 +43,7 @@ export default function Home() {
   const [selectedMemo, setSelectedMemo] = useState<Memo|null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [editingItem, setEditingItem] = useState<BoardItem|null>(null);
+  const [showAlarm, setShowAlarm] = useState(false);
   const [editingTitle, setEditingTitle] = useState('');
   const [dragOverId, setDragOverId] = useState<string|null>(null);
   const dragItemId = React.useRef<string|null>(null);
@@ -269,6 +270,64 @@ export default function Home() {
       {/* 메인 */}
       <div style={{ flex:1, padding:'48px 40px', overflowY:'auto' }}>
         {loading && <p style={{ color:'#7a6e5e', textAlign:'center' }}>불러오는 중...</p>}
+
+        {/* ── 종료 임박 알림 배너 ── */}
+        {(() => {
+          const today = new Date();
+          today.setHours(0,0,0,0);
+          const urgent = projects.filter(p => {
+            if (!p.목표일 || p.상태==='완료') return false;
+            const end = new Date(p.목표일);
+            end.setHours(0,0,0,0);
+            const diff = Math.ceil((end.getTime()-today.getTime())/86400000);
+            return diff >= 0 && diff <= 7;
+          }).map(p => {
+            const end = new Date(p.목표일);
+            end.setHours(0,0,0,0);
+            const diff = Math.ceil((end.getTime()-today.getTime())/86400000);
+            return {...p, dday: diff};
+          }).sort((a,b) => a.dday - b.dday);
+
+          if (urgent.length === 0) return null;
+
+          const getColor = (d: number) => d <= 1 ? '#c0392b' : d <= 3 ? '#e07020' : '#b08020';
+          const getBg = (d: number) => d <= 1 ? '#fde8e8' : d <= 3 ? '#fef0e0' : '#fef9e0';
+          const getEmoji = (d: number) => d <= 1 ? '🔴' : d <= 3 ? '🟠' : '🟡';
+
+          return (
+            <div style={{ marginBottom:'20px', borderRadius:'10px', border:`1px solid ${urgent[0].dday<=1?'#f5c6cb':urgent[0].dday<=3?'#ffd8a8':'#fff3cd'}`, overflow:'hidden' }}>
+              <div onClick={()=>setShowAlarm(v=>!v)}
+                style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', background:getBg(urgent[0].dday), cursor:'pointer' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+                  <span style={{ fontSize:'14px' }}>⚠️</span>
+                  <span style={{ fontSize:'13px', fontWeight:600, color:getColor(urgent[0].dday) }}>종료 임박 업무 {urgent.length}건</span>
+                  {!showAlarm && (
+                    <div style={{ display:'flex', gap:'6px' }}>
+                      {urgent.slice(0,3).map(p => (
+                        <span key={p.ID} style={{ fontSize:'11px', padding:'1px 7px', borderRadius:'10px', background:'rgba(0,0,0,0.08)', color:getColor(p.dday), fontWeight:500 }}>D-{p.dday}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <span style={{ fontSize:'12px', color:getColor(urgent[0].dday) }}>{showAlarm?'▲':'▼'}</span>
+              </div>
+              {showAlarm && (
+                <div style={{ background:'#fffdf5', borderTop:`1px solid ${urgent[0].dday<=1?'#f5c6cb':urgent[0].dday<=3?'#ffd8a8':'#fff3cd'}` }}>
+                  {urgent.map(p => (
+                    <div key={p.ID} style={{ display:'flex', alignItems:'center', gap:'10px', padding:'9px 14px', borderBottom:'1px solid #f0ece4' }}>
+                      <span style={{ fontSize:'13px' }}>{getEmoji(p.dday)}</span>
+                      <span style={{ fontSize:'13px', color:'#2c2620', flex:1 }}>{p.제목}</span>
+                      <span style={{ fontSize:'12px', fontWeight:700, color:getColor(p.dday), flexShrink:0 }}>
+                        {p.dday===0 ? 'D-Day' : `D-${p.dday}`}
+                      </span>
+                      <span style={{ fontSize:'11px', color:'#9a8e7e', flexShrink:0 }}>{p.목표일}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ── 홈 탭 ── */}
         {tab==='home' && (
