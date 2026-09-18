@@ -176,6 +176,17 @@ export default function Home() {
     await loadBoard();
   };
 
+  const handleDeleteAllItems = async () => {
+    if (!selectedProjId) return;
+    const targets = boardItems.filter(x => x.프로젝트ID === selectedProjId);
+    if (targets.length === 0) { alert('삭제할 항목이 없어요.'); return; }
+    if (!confirm(`그룹/태스크 ${targets.length}개를 전체 삭제할까요?\n업무는 유지됩니다.`)) return;
+    for (const item of targets) {
+      await fetch('/api/project', { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ID:item.ID}) });
+    }
+    await loadBoard();
+  };
+
   const projectsRaw = boardItems.filter(x=>x.유형==='업무');
   const projects = (() => {
     const sorted = projOrder.length > 0
@@ -395,6 +406,8 @@ export default function Home() {
                       {selectedProj.설명 && <p style={{ fontSize:'12px', color:'#7a6e5e', margin:0 }}>{selectedProj.설명}</p>}
                     </div>
                     <div style={{ display:'flex', gap:'6px' }}>
+                      <button onClick={handleDeleteAllItems}
+                        style={{ padding:'5px 10px', background:'#fef3cd', border:'none', borderRadius:'6px', color:'#856404', fontSize:'12px', cursor:'pointer', whiteSpace:'nowrap' }}>🗑️ 전체 삭제</button>
                       <button onClick={()=>{ setEditItem(selectedProj); setForm({...selectedProj}); setShowModal(true); }}
                         style={{ padding:'5px 10px', background:'#e0d8c8', border:'none', borderRadius:'6px', color:'#2c2620', fontSize:'12px', cursor:'pointer' }}>수정</button>
                       <button onClick={()=>handleDelete(selectedProj)}
