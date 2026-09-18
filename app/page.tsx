@@ -63,19 +63,26 @@ export default function Home() {
 
   const handleDrop = (targetId: string) => {
     const fromId = dragItemId.current;
-    if (!fromId || fromId === targetId) { setDragOverId(null); return; }
-    const projs = boardItems.filter(x => x.유형 === '업무');
+    dragItemId.current = null;
+    setDragOverId(null);
+    if (!fromId || fromId === targetId) return;
+    // 현재 화면에 보이는 정렬된 순서 기준으로 재정렬
+    const projs = (() => {
+      const raw = boardItems.filter(x => x.유형 === '업무');
+      const order = projOrder;
+      return order.length > 0
+        ? [...raw].sort((a,b) => { const ai=order.indexOf(a.ID); const bi=order.indexOf(b.ID); if(ai===-1&&bi===-1)return 0; if(ai===-1)return 1; if(bi===-1)return -1; return ai-bi; })
+        : raw;
+    })();
     const fromIdx = projs.findIndex(p => p.ID === fromId);
     const toIdx = projs.findIndex(p => p.ID === targetId);
-    if (fromIdx < 0 || toIdx < 0) { setDragOverId(null); return; }
+    if (fromIdx < 0 || toIdx < 0) return;
     const reordered = [...projs];
     const [moved] = reordered.splice(fromIdx, 1);
     reordered.splice(toIdx, 0, moved);
     const newOrder = reordered.map(p => p.ID);
     setProjOrder(newOrder);
     try { localStorage.setItem('pd_proj_order', JSON.stringify(newOrder)); } catch {}
-    setDragOverId(null);
-    dragItemId.current = null;
   };
 
   useEffect(() => {
@@ -326,13 +333,13 @@ export default function Home() {
                       onDragOver={e=>{ e.preventDefault(); setDragOverId(proj.ID); }}
                       onDragLeave={()=>setDragOverId(null)}
                       onDrop={()=>handleDrop(proj.ID)}
-                      onDragEnd={()=>{ setDragOverId(null); dragItemId.current=null; }}
                       onClick={()=>setSelectedProjId(isSelected?null:proj.ID)}
-                      style={{ background:isSelected?'#e8e0d0':'#f2ede4', borderRadius:'10px', padding:'12px 14px', cursor:'pointer', border:`2px solid ${dragOverId===proj.ID?'#c4a882':isSelected?'#c4a882':color+'40'}`, transition:'all 0.15s', userSelect:'none' }}>
+                      style={{ background:isSelected?'#e8e0d0':'#f2ede4', borderRadius:'10px', padding:'12px 14px', cursor:'pointer', border:`2px solid ${dragOverId===proj.ID?'#c4a882':isSelected?'#c4a882':color+'40'}`, transition:'border-color 0.15s', userSelect:'none' }}>
                       <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'4px' }}>
                         <span
                           draggable
                           onDragStart={e=>{ e.stopPropagation(); dragItemId.current=proj.ID; }}
+                          onDragEnd={()=>{ dragItemId.current=null; setDragOverId(null); }}
                           style={{ color:'#c0b0a0', fontSize:'14px', cursor:'grab', flexShrink:0, padding:'0 2px', lineHeight:1 }}
                           title="드래그하여 순서 변경">⠿</span>
                         <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:color, flexShrink:0 }} />
