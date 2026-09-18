@@ -42,6 +42,8 @@ export default function Home() {
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
   const [selectedMemo, setSelectedMemo] = useState<Memo|null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [editingItem, setEditingItem] = useState<BoardItem|null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
   const [newGroupTitle, setNewGroupTitle] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
@@ -363,8 +365,20 @@ export default function Home() {
                     {projItems.map(item=>{
                       if (item.유형==='그룹') return (
                         <div key={item.ID} style={{ display:'flex', alignItems:'center', gap:'8px', padding:'8px 4px', marginTop:'8px' }}>
-                          <span style={{ fontSize:'12px', fontWeight:700, color:'#7a6e5e', flex:1 }}>{item.제목}</span>
-                          <button onClick={()=>handleDelete(item)} style={{ background:'none', border:'none', color:'#b0a090', cursor:'pointer', fontSize:'12px' }}>🗑️</button>
+                          {editingItem?.ID===item.ID ? (
+                            <>
+                              <input value={editingTitle} onChange={e=>setEditingTitle(e.target.value)} onKeyDown={async e=>{ if(e.key==='Enter'){ await fetch('/api/project',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...item,제목:editingTitle})}); setEditingItem(null); await loadBoard(); } if(e.key==='Escape') setEditingItem(null); }}
+                                style={{ flex:1, padding:'4px 8px', background:'#faf8f4', border:'1px solid #c4a882', borderRadius:'6px', color:'#2c2620', fontSize:'12px', outline:'none' }} autoFocus />
+                              <button onClick={async()=>{ await fetch('/api/project',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...item,제목:editingTitle})}); setEditingItem(null); await loadBoard(); }} style={{ background:'#c4a882', border:'none', borderRadius:'5px', color:'#fff', cursor:'pointer', fontSize:'11px', padding:'3px 8px' }}>저장</button>
+                              <button onClick={()=>setEditingItem(null)} style={{ background:'none', border:'none', color:'#9a8e7e', cursor:'pointer', fontSize:'11px' }}>취소</button>
+                            </>
+                          ) : (
+                            <>
+                              <span style={{ fontSize:'12px', fontWeight:700, color:'#7a6e5e', flex:1 }}>{item.제목}</span>
+                              <button onClick={()=>{ setEditingItem(item); setEditingTitle(item.제목); }} style={{ background:'none', border:'none', color:'#b0a090', cursor:'pointer', fontSize:'12px' }}>✏️</button>
+                              <button onClick={()=>handleDelete(item)} style={{ background:'none', border:'none', color:'#b0a090', cursor:'pointer', fontSize:'12px' }}>🗑️</button>
+                            </>
+                          )}
                         </div>
                       );
                       const isDone=item.상태==='완료';
@@ -376,8 +390,20 @@ export default function Home() {
                               color:item.상태==='완료'?'#2e5e2e':item.상태==='진행중'?'#1a5fa0':'#7a6e5e' }}>
                             {['대기','진행중','완료'].map(s=><option key={s} value={s}>{s}</option>)}
                           </select>
-                          <span style={{ flex:1, fontSize:'13px', color:isDone?'#9a8e7e':'#2c2620', textDecoration:isDone?'line-through':'none' }}>{item.제목}</span>
-                          <button onClick={()=>handleDelete(item)} style={{ background:'none', border:'none', color:'#b0a090', cursor:'pointer', fontSize:'13px', flexShrink:0 }}>🗑️</button>
+                          {editingItem?.ID===item.ID ? (
+                            <>
+                              <input value={editingTitle} onChange={e=>setEditingTitle(e.target.value)} onKeyDown={async e=>{ if(e.key==='Enter'){ await fetch('/api/project',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...item,제목:editingTitle})}); setEditingItem(null); await loadBoard(); } if(e.key==='Escape') setEditingItem(null); }}
+                                style={{ flex:1, padding:'4px 8px', background:'#faf8f4', border:'1px solid #c4a882', borderRadius:'6px', color:'#2c2620', fontSize:'12px', outline:'none' }} autoFocus />
+                              <button onClick={async()=>{ await fetch('/api/project',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...item,제목:editingTitle})}); setEditingItem(null); await loadBoard(); }} style={{ background:'#c4a882', border:'none', borderRadius:'5px', color:'#fff', cursor:'pointer', fontSize:'11px', padding:'3px 8px', flexShrink:0 }}>저장</button>
+                              <button onClick={()=>setEditingItem(null)} style={{ background:'none', border:'none', color:'#9a8e7e', cursor:'pointer', fontSize:'11px', flexShrink:0 }}>취소</button>
+                            </>
+                          ) : (
+                            <>
+                              <span style={{ flex:1, fontSize:'13px', color:isDone?'#9a8e7e':'#2c2620', textDecoration:isDone?'line-through':'none' }}>{item.제목}</span>
+                              <button onClick={()=>{ setEditingItem(item); setEditingTitle(item.제목); }} style={{ background:'none', border:'none', color:'#b0a090', cursor:'pointer', fontSize:'13px', flexShrink:0 }}>✏️</button>
+                              <button onClick={()=>handleDelete(item)} style={{ background:'none', border:'none', color:'#b0a090', cursor:'pointer', fontSize:'13px', flexShrink:0 }}>🗑️</button>
+                            </>
+                          )}
                         </div>
                       );
                     })}
