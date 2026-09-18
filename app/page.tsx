@@ -352,7 +352,7 @@ export default function Home() {
                       onDragOver={e=>{ e.preventDefault(); setDragOverId(proj.ID); }}
                       onDragLeave={()=>setDragOverId(null)}
                       onDrop={()=>handleDrop(proj.ID)}
-                      onClick={()=>setSelectedProjId(isSelected?null:proj.ID)}
+                      onClick={()=>setSelectedProjId(proj.ID)}
                       style={{ background:isSelected?'#e8e0d0':'#f2ede4', borderRadius:'10px', padding:'12px 14px', cursor:'pointer', border:`2px solid ${dragOverId===proj.ID?'#c4a882':isSelected?'#c4a882':color+'40'}`, transition:'border-color 0.15s', userSelect:'none', opacity:proj.상태==='완료'?0.5:1 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'4px' }}>
                         <span
