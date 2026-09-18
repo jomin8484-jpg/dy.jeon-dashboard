@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface BoardItem {
   ID: string; 프로젝트ID: string; 제목: string; 설명: string;
@@ -44,6 +44,9 @@ export default function Home() {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [editingItem, setEditingItem] = useState<BoardItem|null>(null);
   const [editingTitle, setEditingTitle] = useState('');
+  const [dragOverId, setDragOverId] = useState<string|null>(null);
+  const dragItemId = React.useRef<string|null>(null);
+  const [projOrder, setProjOrder] = useState<string[]>(() => { try { const s = localStorage.getItem('pd_proj_order'); return s ? JSON.parse(s) : []; } catch { return []; } });
   const [newGroupTitle, setNewGroupTitle] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
@@ -56,6 +59,23 @@ export default function Home() {
   const loadBoard = async () => {
     const res = await fetch('/api/project').then(r => r.json());
     setBoardItems(Array.isArray(res) ? res.filter((x:BoardItem)=>x.ID).map((x:BoardItem)=>({...x, 시작일:toISO(x.시작일||''), 목표일:toISO(x.목표일||'')})) : []);
+  };
+
+  const handleDrop = (targetId: string) => {
+    const fromId = dragItemId.current;
+    if (!fromId || fromId === targetId) { setDragOverId(null); return; }
+    const projs = boardItems.filter(x => x.유형 === '업무');
+    const fromIdx = projs.findIndex(p => p.ID === fromId);
+    const toIdx = projs.findIndex(p => p.ID === targetId);
+    if (fromIdx < 0 || toIdx < 0) { setDragOverId(null); return; }
+    const reordered = [...projs];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    const newOrder = reordered.map(p => p.ID);
+    setProjOrder(newOrder);
+    try { localStorage.setItem('pd_proj_order', JSON.stringify(newOrder)); } catch {}
+    setDragOverId(null);
+    dragItemId.current = null;
   };
 
   useEffect(() => {
@@ -136,7 +156,17 @@ export default function Home() {
     await loadBoard();
   };
 
-  const projects = boardItems.filter(x=>x.유형==='업무');
+  const projectsRaw = boardItems.filter(x=>x.유형==='업무');
+  const projects = projOrder.length > 0
+    ? [...projectsRaw].sort((a,b) => {
+        const ai = projOrder.indexOf(a.ID);
+        const bi = projOrder.indexOf(b.ID);
+        if (ai === -1 && bi === -1) return 0;
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      })
+    : projectsRaw;
   const selectedProj = selectedProjId ? projects.find(p=>p.ID===selectedProjId) : null;
   const projItems = selectedProjId ? boardItems.filter(x=>x.프로젝트ID===selectedProjId) : [];
   const projTasks = projItems.filter(x=>x.유형==='태스크');
@@ -292,9 +322,17 @@ export default function Home() {
                   const pct=pt.length>0?Math.round(done/pt.length*100):0;
                   const isSelected=selectedProjId===proj.ID;
                   return (
-                    <div key={proj.ID} onClick={()=>setSelectedProjId(isSelected?null:proj.ID)}
-                      style={{ background:isSelected?'#e8e0d0':'#f2ede4', borderRadius:'10px', padding:'12px 14px', cursor:'pointer', border:`1px solid ${isSelected?'#c4a882':color+'40'}`, transition:'all 0.15s' }}>
+                    <div key={proj.ID}
+                      draggable
+                      onDragStart={()=>{ dragItemId.current=proj.ID; }}
+                      onDragOver={e=>{ e.preventDefault(); setDragOverId(proj.ID); }}
+                      onDragLeave={()=>setDragOverId(null)}
+                      onDrop={()=>handleDrop(proj.ID)}
+                      onDragEnd={()=>{ setDragOverId(null); dragItemId.current=null; }}
+                      onClick={()=>setSelectedProjId(isSelected?null:proj.ID)}
+                      style={{ background:isSelected?'#e8e0d0':'#f2ede4', borderRadius:'10px', padding:'12px 14px', cursor:'grab', border:`2px solid ${dragOverId===proj.ID?'#c4a882':isSelected?'#c4a882':color+'40'}`, transition:'all 0.15s', opacity:dragItemId.current===proj.ID?0.5:1, transform:dragOverId===proj.ID?'scale(1.01)':'scale(1)' }}>
                       <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'4px' }}>
+                        <span style={{ color:'#c0b0a0', fontSize:'12px', cursor:'grab', flexShrink:0 }}>⠿</span>
                         <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:color, flexShrink:0 }} />
                         <span style={{ fontSize:'13px', fontWeight:600, color:'#2c2620', flex:1 }}>{proj.제목}</span>
                         <select value={proj.상태} onClick={e=>e.stopPropagation()} onChange={e=>{ e.stopPropagation(); handleStatusChange(proj,e.target.value); }}
