@@ -164,16 +164,22 @@ export default function Home() {
   };
 
   const projectsRaw = boardItems.filter(x=>x.유형==='업무');
-  const projects = projOrder.length > 0
-    ? [...projectsRaw].sort((a,b) => {
-        const ai = projOrder.indexOf(a.ID);
-        const bi = projOrder.indexOf(b.ID);
-        if (ai === -1 && bi === -1) return 0;
-        if (ai === -1) return 1;
-        if (bi === -1) return -1;
-        return ai - bi;
-      })
-    : projectsRaw;
+  const projects = (() => {
+    const sorted = projOrder.length > 0
+      ? [...projectsRaw].sort((a,b) => {
+          const ai = projOrder.indexOf(a.ID);
+          const bi = projOrder.indexOf(b.ID);
+          if (ai === -1 && bi === -1) return 0;
+          if (ai === -1) return 1;
+          if (bi === -1) return -1;
+          return ai - bi;
+        })
+      : projectsRaw;
+    // 완료 업무는 맨 하단 고정
+    const active = sorted.filter(p => p.상태 !== '완료');
+    const done = sorted.filter(p => p.상태 === '완료');
+    return [...active, ...done];
+  })();
   const selectedProj = selectedProjId ? projects.find(p=>p.ID===selectedProjId) : null;
   const projItems = selectedProjId ? boardItems.filter(x=>x.프로젝트ID===selectedProjId) : [];
   const projTasks = projItems.filter(x=>x.유형==='태스크');
