@@ -94,7 +94,9 @@ export default function Home() {
 
   const handleSave = async () => {
     const method = editItem ? 'PUT' : 'POST';
-    const body = editItem ? {...form, ID:editItem.ID} : {...form, ID:nextId(boardItems)};
+    const body = editItem
+      ? { ...form, ID: editItem.ID, 유형: editItem.유형 || '업무', 프로젝트ID: editItem.프로젝트ID || '' }
+      : { ...form, ID: nextId(boardItems), 유형: form.유형 || '업무', 프로젝트ID: '' };
     await fetch('/api/project', { method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
     await loadBoard();
     setShowModal(false);
