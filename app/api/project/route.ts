@@ -12,8 +12,6 @@ const auth = new google.auth.GoogleAuth({
 const SHEET_ID = process.env.SHEET_ID;
 const SHEET_NAME = '업무보드';
 
-// ID | 프로젝트ID | 제목 | 설명 | 유형 | 상태 | 우선순위 | 시작일 | 목표일 | 메모
-
 export async function GET() {
   try {
     const sheets = google.sheets({ version: 'v4', auth });
@@ -25,7 +23,7 @@ export async function GET() {
     if (rows.length < 2) return NextResponse.json([]);
     const headers = rows[0];
     const data = rows.slice(1)
-      .filter(row => row[0])
+      .filter(row => row[0] && row[0].toString().trim() !== '')
       .map(row => {
         const obj: Record<string, string> = {};
         headers.forEach((h, i) => { obj[h] = row[i] || ''; });
@@ -41,9 +39,24 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const sheets = google.sheets({ version: 'v4', auth });
-    await sheets.spreadsheets.values.append({
+    // 현재 데이터 읽어서 마지막 행 다음에 추가
+    const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: `${SHEET_NAME}!A:J`,
+      range: `${SHEET_NAME}!A:A`,
+    });
+    const rows = res.data.values || [];
+    // A열에 값이 있는 마지막 행 찾기
+    let lastRow = 1;
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (rows[i][0] && rows[i][0].toString().trim() !== '') {
+        lastRow = i + 1;
+        break;
+      }
+    }
+    const nextRow = lastRow + 1;
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: `${SHEET_NAME}!A${nextRow}:J${nextRow}`,
       valueInputOption: 'RAW',
       requestBody: {
         values: [[
