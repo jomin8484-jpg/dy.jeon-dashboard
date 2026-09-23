@@ -56,6 +56,8 @@ export default function Home() {
   const [inlineMemoForm, setInlineMemoForm] = useState({ 미팅명:'', 날짜:'', 참석자:'', 내용:'', 액션아이템:'' });
   const [showBoardForm, setShowBoardForm] = useState(false);
   const [boardMemo, setBoardMemo] = useState('');
+  const [editingProj, setEditingProj] = useState(false);
+  const [editProjForm, setEditProjForm] = useState<any>({});
   const [savingMemo, setSavingMemo] = useState(false);
   const [showMemoForm, setShowMemoForm] = useState(false);
   const [memoSearch, setMemoSearch] = useState('');
@@ -554,20 +556,50 @@ export default function Home() {
               {/* 오른쪽 체크리스트 */}
               {selectedProj ? (
                 <div style={{ background:'#f2ede4', borderRadius:'12px', padding:'20px', border:'1px solid #e0d8c8' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'12px' }}>
-                    <div>
-                      <h3 style={{ fontSize:'16px', fontWeight:700, margin:'0 0 4px' }}>{selectedProj.제목}</h3>
-                      {selectedProj.설명 && <p style={{ fontSize:'12px', color:'#7a6e5e', margin:0 }}>{selectedProj.설명}</p>}
+                  {editingProj ? (
+                    /* 인라인 수정 폼 */
+                    <div style={{ marginBottom:'12px', padding:'12px', background:'#faf8f4', borderRadius:'10px', border:'1px solid #c4a882' }}>
+                      <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
+                        <input placeholder="업무명" value={editProjForm.제목||''} onChange={e=>setEditProjForm({...editProjForm,제목:e.target.value})}
+                          style={{ padding:'7px 10px', background:'#fff', border:'1px solid #e0d8c8', borderRadius:'7px', color:'#2c2620', fontSize:'13px', outline:'none' }} />
+                        <input placeholder="설명 (선택)" value={editProjForm.설명||''} onChange={e=>setEditProjForm({...editProjForm,설명:e.target.value})}
+                          style={{ padding:'7px 10px', background:'#fff', border:'1px solid #e0d8c8', borderRadius:'7px', color:'#2c2620', fontSize:'13px', outline:'none' }} />
+                        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'8px' }}>
+                          <select value={editProjForm.상태||'진행중'} onChange={e=>setEditProjForm({...editProjForm,상태:e.target.value})}
+                            style={{ padding:'7px 8px', background:'#fff', border:'1px solid #e0d8c8', borderRadius:'7px', color:'#2c2620', fontSize:'12px', outline:'none' }}>
+                            {['진행중','완료','보류','대기'].map(v=><option key={v}>{v}</option>)}
+                          </select>
+                          <input type="date" value={editProjForm.시작일||''} onChange={e=>setEditProjForm({...editProjForm,시작일:e.target.value})}
+                            style={{ padding:'7px 8px', background:'#fff', border:'1px solid #e0d8c8', borderRadius:'7px', color:'#2c2620', fontSize:'12px', outline:'none', colorScheme:'light' }} />
+                          <input type="date" value={editProjForm.목표일||''} onChange={e=>setEditProjForm({...editProjForm,목표일:e.target.value})}
+                            style={{ padding:'7px 8px', background:'#fff', border:'1px solid #e0d8c8', borderRadius:'7px', color:'#2c2620', fontSize:'12px', outline:'none', colorScheme:'light' }} />
+                        </div>
+                        <div style={{ display:'flex', gap:'8px', justifyContent:'flex-end' }}>
+                          <button onClick={()=>setEditingProj(false)} style={{ padding:'6px 12px', background:'#e0d8c8', border:'none', borderRadius:'7px', color:'#7a6e5e', fontSize:'12px', cursor:'pointer' }}>취소</button>
+                          <button onClick={async()=>{
+                            await fetch('/api/project',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...selectedProj,...editProjForm})});
+                            setEditingProj(false);
+                            await loadBoard();
+                          }} style={{ padding:'6px 16px', background:'#c4a882', border:'none', borderRadius:'7px', color:'#fff', fontSize:'12px', fontWeight:600, cursor:'pointer' }}>저장</button>
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ display:'flex', gap:'6px' }}>
-                      <button onClick={handleDeleteAllItems}
-                        style={{ padding:'5px 10px', background:'#fef3cd', border:'none', borderRadius:'6px', color:'#856404', fontSize:'12px', cursor:'pointer', whiteSpace:'nowrap' }}>🗑️ 전체 삭제</button>
-                      <button onClick={()=>{ setEditItem(selectedProj); setForm({...selectedProj}); setShowModal(true); }}
-                        style={{ padding:'5px 10px', background:'#e0d8c8', border:'none', borderRadius:'6px', color:'#2c2620', fontSize:'12px', cursor:'pointer' }}>수정</button>
-                      <button onClick={()=>handleDelete(selectedProj)}
-                        style={{ padding:'5px 10px', background:'#fde8e8', border:'none', borderRadius:'6px', color:'#c0392b', fontSize:'12px', cursor:'pointer' }}>삭제</button>
+                  ) : (
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'12px' }}>
+                      <div>
+                        <h3 style={{ fontSize:'16px', fontWeight:700, margin:'0 0 4px' }}>{selectedProj.제목}</h3>
+                        {selectedProj.설명 && <p style={{ fontSize:'12px', color:'#7a6e5e', margin:0 }}>{selectedProj.설명}</p>}
+                      </div>
+                      <div style={{ display:'flex', gap:'6px' }}>
+                        <button onClick={handleDeleteAllItems}
+                          style={{ padding:'5px 10px', background:'#fef3cd', border:'none', borderRadius:'6px', color:'#856404', fontSize:'12px', cursor:'pointer', whiteSpace:'nowrap' }}>🗑️ 전체 삭제</button>
+                        <button onClick={()=>{ setEditProjForm({...selectedProj}); setEditingProj(true); }}
+                          style={{ padding:'5px 10px', background:'#e0d8c8', border:'none', borderRadius:'6px', color:'#2c2620', fontSize:'12px', cursor:'pointer' }}>수정</button>
+                        <button onClick={()=>handleDelete(selectedProj)}
+                          style={{ padding:'5px 10px', background:'#fde8e8', border:'none', borderRadius:'6px', color:'#c0392b', fontSize:'12px', cursor:'pointer' }}>삭제</button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   {/* 진행률 */}
                   <div style={{ marginBottom:'12px', padding:'10px 12px', background:'#faf8f4', borderRadius:'8px' }}>
                     <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'5px' }}>
@@ -840,31 +872,7 @@ export default function Home() {
           </>
         )}
 
-        {/* ── 모달 (업무 수정용) ── */}
-        {showModal && (
-          <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.3)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:100 }}>
-            <div style={{ background:'#f2ede4', borderRadius:'16px', padding:'28px', width:'440px', maxWidth:'90vw', border:'1px solid #e0d8c8' }}>
-              <h3 style={{ fontSize:'16px', fontWeight:700, margin:'0 0 20px' }}>{editItem?'업무 수정':'업무 추가'}</h3>
-              <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
-                <input placeholder="업무명" value={form.제목||''} onChange={e=>setForm({...form,제목:e.target.value})} style={inputStyle} />
-                <input placeholder="설명 (선택)" value={form.설명||''} onChange={e=>setForm({...form,설명:e.target.value})} style={inputStyle} />
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
-                  <select value={form.상태||'진행중'} onChange={e=>setForm({...form,상태:e.target.value})} style={inputStyle}>
-                    {['진행중','완료','보류','대기'].map(v=><option key={v}>{v}</option>)}
-                  </select>
-                  <input placeholder="진행률" value={form.진행률||'0'} onChange={e=>setForm({...form,진행률:e.target.value})} style={inputStyle} />
-                  <input type="date" value={form.시작일||''} onChange={e=>setForm({...form,시작일:e.target.value})} style={inputStyle} />
-                  <input type="date" value={form.목표일||''} onChange={e=>setForm({...form,목표일:e.target.value})} style={inputStyle} />
-                </div>
-                <textarea placeholder="메모 (선택)" value={form.메모||''} onChange={e=>setForm({...form,메모:e.target.value})} style={{...inputStyle,height:'80px',resize:'vertical'}} />
-              </div>
-              <div style={{ display:'flex', gap:'8px', marginTop:'20px' }}>
-                <button onClick={()=>setShowModal(false)} style={{ flex:1, padding:'10px', background:'#e0d8c8', border:'none', borderRadius:'8px', color:'#7a6e5e', fontSize:'13px', cursor:'pointer' }}>취소</button>
-                <button onClick={handleSave} style={{ flex:2, padding:'10px', background:'#c4a882', border:'none', borderRadius:'8px', color:'#fff', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>저장</button>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
     </div>
   );
