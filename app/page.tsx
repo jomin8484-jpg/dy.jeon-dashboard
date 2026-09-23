@@ -389,6 +389,40 @@ export default function Home() {
               <button onClick={()=>{ setShowBoardForm(v=>!v); setBoardForm({제목:'',설명:'',상태:'진행중',시작일:'',목표일:'',메모:''}); }}
                 style={{ padding:'8px 16px', background:'#c4a882', border:'none', borderRadius:'8px', color:'#fff', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>{showBoardForm ? '✕ 닫기' : '+ 업무 추가'}</button>
             </div>
+
+            {/* 업무 추가 폼 */}
+            {showBoardForm && (
+              <div style={{ background:'#f2ede4', borderRadius:'12px', padding:'16px', border:'1px solid #c4a882', marginBottom:'16px' }}>
+                <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+                  <input placeholder="업무명 *" value={boardForm.제목} onChange={e=>setBoardForm({...boardForm,제목:e.target.value})}
+                    style={{ padding:'8px 12px', background:'#faf8f4', border:'1px solid #e0d8c8', borderRadius:'8px', color:'#2c2620', fontSize:'13px', outline:'none' }} />
+                  <input placeholder="설명 (선택)" value={boardForm.설명} onChange={e=>setBoardForm({...boardForm,설명:e.target.value})}
+                    style={{ padding:'8px 12px', background:'#faf8f4', border:'1px solid #e0d8c8', borderRadius:'8px', color:'#2c2620', fontSize:'13px', outline:'none' }} />
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'8px' }}>
+                    <select value={boardForm.상태} onChange={e=>setBoardForm({...boardForm,상태:e.target.value})}
+                      style={{ padding:'8px 10px', background:'#faf8f4', border:'1px solid #e0d8c8', borderRadius:'8px', color:'#2c2620', fontSize:'13px', outline:'none' }}>
+                      {['진행중','대기','보류'].map(v=><option key={v}>{v}</option>)}
+                    </select>
+                    <input type="date" value={boardForm.시작일} onChange={e=>setBoardForm({...boardForm,시작일:e.target.value})}
+                      style={{ padding:'8px 10px', background:'#faf8f4', border:'1px solid #e0d8c8', borderRadius:'8px', color:'#2c2620', fontSize:'13px', outline:'none', colorScheme:'light' }} />
+                    <input type="date" value={boardForm.목표일} onChange={e=>setBoardForm({...boardForm,목표일:e.target.value})}
+                      style={{ padding:'8px 10px', background:'#faf8f4', border:'1px solid #e0d8c8', borderRadius:'8px', color:'#2c2620', fontSize:'13px', outline:'none', colorScheme:'light' }} />
+                  </div>
+                  <div style={{ display:'flex', gap:'8px', justifyContent:'flex-end' }}>
+                    <button onClick={()=>setShowBoardForm(false)} style={{ padding:'7px 14px', background:'#e0d8c8', border:'none', borderRadius:'8px', color:'#7a6e5e', fontSize:'13px', cursor:'pointer' }}>취소</button>
+                    <button onClick={async()=>{
+                      if (!boardForm.제목.trim()) return;
+                      const newId = nextId(boardItems);
+                      await fetch('/api/project',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ID:newId,프로젝트ID:'',제목:boardForm.제목,설명:boardForm.설명,유형:'업무',상태:boardForm.상태,우선순위:'',시작일:boardForm.시작일,목표일:boardForm.목표일,메모:''})});
+                      setShowBoardForm(false);
+                      setBoardForm({제목:'',설명:'',상태:'진행중',시작일:'',목표일:'',메모:''});
+                      await loadBoard();
+                    }} style={{ padding:'7px 18px', background:'#c4a882', border:'none', borderRadius:'8px', color:'#fff', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>저장</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div style={{ display:'grid', gridTemplateColumns:selectedProj?'280px 1fr':'1fr', gap:'16px' }}>
               {/* 왼쪽 업무 목록 */}
               <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
