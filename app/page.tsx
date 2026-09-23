@@ -707,7 +707,7 @@ export default function Home() {
                 })
                 .map(memo=>(
                 <div key={memo.ID} style={{ background:'#f2ede4', borderRadius:'12px', border:`1px solid ${selectedMemo?.ID===memo.ID?'#c4a882':'#e0d8c8'}`, overflow:'hidden' }}>
-                  <div onClick={()=>setSelectedMemo(selectedMemo?.ID===memo.ID?null:memo)}
+                  <div onClick={()=>{ setSelectedMemo(selectedMemo?.ID===memo.ID?null:memo); setEditingMemoId(null); }}
                     style={{ padding:'14px 16px', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', opacity:memo.상태==='완료'?0.5:1 }}>
                     <div>
                       <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'3px' }}>
