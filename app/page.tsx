@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface BoardItem {
   ID: string; 프로젝트ID: string; 제목: string; 설명: string;
@@ -42,6 +42,7 @@ export default function Home() {
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
   const [selectedMemo, setSelectedMemo] = useState<Memo|null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDue, setNewTaskDue] = useState('');
   const [editingItem, setEditingItem] = useState<BoardItem|null>(null);
   const [showAlarm, setShowAlarm] = useState(false);
   const [editingTitle, setEditingTitle] = useState('');
@@ -54,10 +55,14 @@ export default function Home() {
   const [editingMemoId, setEditingMemoId] = useState<string|null>(null);
   const [inlineMemoForm, setInlineMemoForm] = useState({ 미팅명:'', 날짜:'', 참석자:'', 내용:'', 액션아이템:'' });
   const [showBoardForm, setShowBoardForm] = useState(false);
+  const [boardMemo, setBoardMemo] = useState('');
+  const [savingMemo, setSavingMemo] = useState(false);
   const [showMemoForm, setShowMemoForm] = useState(false);
+  const [memoSearch, setMemoSearch] = useState('');
   const [boardForm, setBoardForm] = useState({ 제목:'', 설명:'', 상태:'진행중', 시작일:'', 목표일:'', 메모:'' });
 
   useEffect(() => { if (sessionStorage.getItem('pd_auth')==='true') setAuth(true); }, []);
+  useEffect(() => { setBoardMemo(selectedProj?.메모||''); }, [selectedProjId]);
 
   const loadBoard = async () => {
     const res = await fetch('/api/project').then(r => r.json());
@@ -147,8 +152,8 @@ export default function Home() {
 
   const handleAddTask = async () => {
     if (!selectedProjId||!newTaskTitle.trim()) return;
-    await fetch('/api/project', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ID:nextId(boardItems), 프로젝트ID:selectedProjId, 제목:newTaskTitle.trim(), 설명:'', 유형:'태스크', 상태:'대기', 우선순위:'보통', 시작일:'', 목표일:'', 메모:''}) });
-    setNewTaskTitle('');
+    await fetch('/api/project', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ID:nextId(boardItems), 프로젝트ID:selectedProjId, 제목:newTaskTitle.trim(), 설명:'', 유형:'태스크', 상태:'대기', 우선순위:'보통', 시작일:'', 목표일:newTaskDue||'', 메모:''}) });
+    setNewTaskTitle(''); setNewTaskDue('');
     await loadBoard();
   };
 
@@ -157,6 +162,14 @@ export default function Home() {
     await fetch('/api/project', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ID:nextId(boardItems), 프로젝트ID:selectedProjId, 제목:newGroupTitle.trim(), 설명:'', 유형:'그룹', 상태:'', 우선순위:'', 시작일:'', 목표일:'', 메모:''}) });
     setNewGroupTitle('');
     await loadBoard();
+  };
+
+  const handleSaveBoardMemo = async () => {
+    if (!selectedProj) return;
+    setSavingMemo(true);
+    await fetch('/api/project',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...selectedProj,메모:boardMemo})});
+    await loadBoard();
+    setSavingMemo(false);
   };
 
   const handleDeleteAllItems = async () => {
@@ -185,6 +198,10 @@ export default function Home() {
   })();
   const selectedProj = selectedProjId ? projects.find(p=>p.ID===selectedProjId) : null;
   const projItems = selectedProjId ? boardItems.filter(x=>x.프로젝트ID===selectedProjId) : [];
+  // 선택된 프로젝트 메모 동기화
+  if (selectedProj && boardMemo !== (selectedProj.메모||'') && !savingMemo) {
+    // 초기 로드 시 메모 설정은 useEffect로 처리
+  }
   const projTasks = projItems.filter(x=>x.유형==='태스크');
   const completedCount = projTasks.filter(x=>x.상태==='완료').length;
   const progress = projTasks.length>0 ? Math.round(completedCount/projTasks.length*100) : 0;
@@ -231,7 +248,7 @@ export default function Home() {
 
   return (
     <div style={{ minHeight:'100vh', background:'#faf8f4', fontFamily:'Arial, sans-serif', color:'#2c2620', display:'flex' }}>
-      {/* 사이드바 */}
+      {/* 사이드바 — PC */}
       <div style={{ width:'200px', minHeight:'100vh', background:'#f2ede4', borderRight:'1px solid #e0d8c8', display:'flex', flexDirection:'column', padding:'24px 12px', flexShrink:0 }}>
         <div style={{ marginBottom:'32px', paddingLeft:'8px' }}>
           <p style={{ fontSize:'16px', fontWeight:700, color:'#2c2620', margin:'0 0 2px' }}>전동열</p>
@@ -242,11 +259,20 @@ export default function Home() {
           {sidebarBtn('board','📋  업무보드')}
           {sidebarBtn('memo','📅  미팅')}
         </div>
+        <button onClick={()=>{
+          const rows = [['ID','프로젝트ID','제목','설명','유형','상태','우선순위','시작일','목표일','메모']];
+          boardItems.forEach(item=>rows.push([item.ID,item.프로젝트ID,item.제목,item.설명,item.유형,item.상태,item.우선순위,item.시작일,item.목표일,item.메모]));
+          const csv = rows.map(r=>r.map(c=>`"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+          const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href=url; a.download=`업무보드_${new Date().toLocaleDateString('en-CA')}.csv`; a.click();
+          URL.revokeObjectURL(url);
+        }} style={{ padding:'8px 12px', background:'none', border:'1px solid #e0d8c8', borderRadius:'8px', color:'#9a8e7e', fontSize:'12px', cursor:'pointer', textAlign:'left', marginBottom:'6px' }}>📥 데이터 내보내기</button>
         <button onClick={()=>{ sessionStorage.removeItem('pd_auth'); setAuth(false); }} style={{ padding:'8px 12px', background:'none', border:'1px solid #e0d8c8', borderRadius:'8px', color:'#9a8e7e', fontSize:'12px', cursor:'pointer', textAlign:'left' }}>로그아웃</button>
       </div>
 
       {/* 메인 */}
-      <div style={{ flex:1, padding:'48px 40px', overflowY:'auto' }}>
+      <div style={{ flex:1, padding:'clamp(20px, 4vw, 48px) clamp(16px, 4vw, 40px)', overflowY:'auto', minWidth:0 }}>
         {loading && <p style={{ color:'#7a6e5e', textAlign:'center' }}>불러오는 중...</p>}
 
         {/* ── 종료 임박 알림 배너 ── */}
@@ -314,10 +340,71 @@ export default function Home() {
         {/* ── 홈 탭 ── */}
         {tab==='home' && (
           <>
-            <div style={{ marginBottom:'24px' }}>
+            <div style={{ marginBottom:'20px' }}>
               <h1 style={{ fontSize:'22px', fontWeight:700, color:'#2c2620', margin:'0 0 4px' }}>안녕하세요, 전동열 책임님 👋</h1>
-              <p style={{ fontSize:'12px', color:'#7a6e5e', margin:0 }}>진행중인 업무 {projects.filter(p=>p.상태==='진행중').length}개</p>
+              <p style={{ fontSize:'12px', color:'#7a6e5e', margin:0 }}>{new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric',weekday:'long'})}</p>
             </div>
+
+            {/* 요약 카드 */}
+            {(() => {
+              const todayStr = new Date().toLocaleDateString('en-CA');
+              const inProgress = projects.filter(p=>p.상태==='진행중');
+              const todayEnd = projects.filter(p=>p.목표일===todayStr&&p.상태!=='완료');
+
+              // 이번 주 월~일
+              const now = new Date(); now.setHours(0,0,0,0);
+              const day = now.getDay();
+              const weekStart = new Date(now); weekStart.setDate(now.getDate()-day);
+              const weekEnd = new Date(now); weekEnd.setDate(now.getDate()+(6-day));
+              const weekStartStr = weekStart.toLocaleDateString('en-CA');
+              const weekEndStr = weekEnd.toLocaleDateString('en-CA');
+              const weekMeetings = memos.filter(m=>m.날짜>=weekStartStr&&m.날짜<=weekEndStr&&m.상태!=='완료').sort((a,b)=>a.날짜.localeCompare(b.날짜));
+
+              return (
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'24px' }}>
+                  {/* 진행중 업무 카드 */}
+                  <div style={{ background:'#f2ede4', borderRadius:'12px', padding:'16px', border:'1px solid #e0d8c8' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'12px' }}>
+                      <span style={{ fontSize:'14px' }}>📋</span>
+                      <span style={{ fontSize:'13px', fontWeight:600, color:'#2c2620' }}>진행중인 업무</span>
+                      <span style={{ fontSize:'11px', background:'#c4a882', color:'#fff', borderRadius:'10px', padding:'1px 8px', marginLeft:'auto' }}>{inProgress.length}개</span>
+                    </div>
+                    {inProgress.length===0 && <p style={{ fontSize:'12px', color:'#9a8e7e', margin:0 }}>진행중인 업무가 없어요</p>}
+                    {inProgress.slice(0,4).map(p=>{
+                      const end = p.목표일 ? new Date(p.목표일) : null;
+                      end?.setHours(0,0,0,0);
+                      const dday = end ? Math.ceil((end.getTime()-now.getTime())/86400000) : null;
+                      return (
+                        <div key={p.ID} onClick={()=>{ setTab('board'); setSelectedProjId(p.ID); }}
+                          style={{ display:'flex', alignItems:'center', gap:'8px', padding:'6px 0', borderBottom:'1px solid #e8e0d0', cursor:'pointer' }}>
+                          <span style={{ fontSize:'12px', color:'#5a4e3e', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p.제목}</span>
+                          {dday!==null && <span style={{ fontSize:'10px', color:dday<=3?'#c0392b':dday<=7?'#e07020':'#9a8e7e', fontWeight:600, flexShrink:0 }}>{dday===0?'D-Day':`D-${dday}`}</span>}
+                        </div>
+                      );
+                    })}
+                    {inProgress.length>4 && <p style={{ fontSize:'11px', color:'#9a8e7e', margin:'6px 0 0' }}>+{inProgress.length-4}개 더</p>}
+                  </div>
+
+                  {/* 이번 주 미팅 카드 */}
+                  <div style={{ background:'#f2ede4', borderRadius:'12px', padding:'16px', border:'1px solid #e0d8c8' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'12px' }}>
+                      <span style={{ fontSize:'14px' }}>📅</span>
+                      <span style={{ fontSize:'13px', fontWeight:600, color:'#2c2620' }}>이번 주 미팅</span>
+                      <span style={{ fontSize:'11px', background:'#c4a882', color:'#fff', borderRadius:'10px', padding:'1px 8px', marginLeft:'auto' }}>{weekMeetings.length}건</span>
+                    </div>
+                    {weekMeetings.length===0 && <p style={{ fontSize:'12px', color:'#9a8e7e', margin:0 }}>이번 주 미팅이 없어요</p>}
+                    {weekMeetings.map(m=>(
+                      <div key={m.ID} onClick={()=>{ setTab('memo'); setSelectedMemo(m); }}
+                        style={{ display:'flex', alignItems:'center', gap:'8px', padding:'6px 0', borderBottom:'1px solid #e8e0d0', cursor:'pointer' }}>
+                        <span style={{ fontSize:'10px', color:'#c4a882', fontWeight:600, flexShrink:0 }}>{m.날짜.slice(5).replace('-','/')}</span>
+                        <span style={{ fontSize:'12px', color:'#5a4e3e', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{m.미팅명}</span>
+                        {m.날짜===todayStr && <span style={{ fontSize:'10px', background:'#e05a4e', color:'#fff', borderRadius:'8px', padding:'1px 6px', flexShrink:0 }}>오늘</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
             <div style={{ border:'1px solid #e0d8c8', borderRadius:'12px', overflow:'hidden', background:'#f2ede4' }}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', borderBottom:'1px solid #e0d8c8' }}>
                 <button onClick={()=>{ if(calMonth===0){setCalMonth(11);setCalYear(y=>y-1);}else setCalMonth(m=>m-1); }} style={{ background:'#e0d8c8', border:'none', borderRadius:'6px', color:'#2c2620', width:'28px', height:'28px', cursor:'pointer', fontSize:'14px' }}>‹</button>
@@ -502,6 +589,8 @@ export default function Home() {
                     <div style={{ display:'flex', gap:'8px' }}>
                       <input placeholder="태스크 추가..." value={newTaskTitle} onChange={e=>setNewTaskTitle(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleAddTask()}
                         style={{ flex:1, padding:'7px 12px', background:'#f2ede4', border:'1px solid #e0d8c8', borderRadius:'8px', color:'#2c2620', fontSize:'12px', outline:'none' }} />
+                      <input type="date" value={newTaskDue} onChange={e=>setNewTaskDue(e.target.value)}
+                        style={{ padding:'7px 8px', background:'#f2ede4', border:'1px solid #e0d8c8', borderRadius:'8px', color:'#2c2620', fontSize:'12px', outline:'none', colorScheme:'light', width:'130px' }} />
                       <button onClick={handleAddTask} style={{ padding:'7px 14px', background:'#c4a882', border:'none', borderRadius:'8px', color:'#fff', fontSize:'12px', fontWeight:600, cursor:'pointer', whiteSpace:'nowrap' }}>+ 태스크</button>
                     </div>
                   </div>
@@ -546,6 +635,12 @@ export default function Home() {
                           ) : (
                             <>
                               <span style={{ flex:1, fontSize:'13px', color:isDone?'#9a8e7e':'#2c2620', textDecoration:isDone?'line-through':'none' }}>{item.제목}</span>
+                          {item.목표일 && (() => {
+                            const due=new Date(item.목표일); due.setHours(0,0,0,0);
+                            const now2=new Date(); now2.setHours(0,0,0,0);
+                            const d=Math.ceil((due.getTime()-now2.getTime())/86400000);
+                            return <span style={{ fontSize:'10px', color:d<0?'#c0392b':d<=3?'#e07020':'#9a8e7e', flexShrink:0, fontWeight:d<=3?600:400 }}>{d===0?'오늘':d<0?`${Math.abs(d)}일 초과`:`D-${d}`}</span>;
+                          })()}
                               <button onClick={()=>{ setEditingItem(item); setEditingTitle(item.제목); }} style={{ background:'none', border:'none', color:'#b0a090', cursor:'pointer', fontSize:'13px', flexShrink:0 }}>✏️</button>
                               <button onClick={()=>handleDelete(item)} style={{ background:'none', border:'none', color:'#b0a090', cursor:'pointer', fontSize:'13px', flexShrink:0 }}>🗑️</button>
                             </>
@@ -553,6 +648,17 @@ export default function Home() {
                         </div>
                       );
                     })}
+                  </div>
+
+                  {/* 업무 메모/노트 */}
+                  <div style={{ marginTop:'16px', paddingTop:'16px', borderTop:'1px solid #e0d8c8' }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'6px' }}>
+                      <span style={{ fontSize:'12px', fontWeight:600, color:'#7a6e5e' }}>📝 메모 / 노트</span>
+                      <button onClick={handleSaveBoardMemo} style={{ fontSize:'11px', padding:'3px 10px', background:'#c4a882', border:'none', borderRadius:'6px', color:'#fff', cursor:'pointer' }}>저장</button>
+                    </div>
+                    <textarea value={boardMemo} onChange={e=>setBoardMemo(e.target.value)}
+                      placeholder="업무 관련 메모를 자유롭게 입력하세요..."
+                      style={{ width:'100%', padding:'10px 12px', background:'#faf8f4', border:'1px solid #e0d8c8', borderRadius:'8px', color:'#2c2620', fontSize:'13px', outline:'none', boxSizing:'border-box', height:'100px', resize:'vertical', lineHeight:'1.6' }} />
                   </div>
                 </div>
               ) : (
@@ -567,11 +673,13 @@ export default function Home() {
         {/* ── 미팅 탭 ── */}
         {tab==='memo' && (
           <>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px' }}>
               <h2 style={{ fontSize:'18px', fontWeight:700, margin:0 }}>📅 미팅</h2>
               <button onClick={()=>{ setShowMemoForm(v=>!v); setMemoForm({미팅명:'',날짜:'',참석자:'',내용:'',액션아이템:''}); setEditingMemoId(null); }}
                 style={{ padding:'8px 16px', background:'#c4a882', border:'none', borderRadius:'8px', color:'#fff', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>{showMemoForm?'✕ 닫기':'+ 미팅 추가'}</button>
             </div>
+            <input placeholder="🔍 미팅명, 참석자, 내용으로 검색..." value={memoSearch} onChange={e=>setMemoSearch(e.target.value)}
+              style={{ width:'100%', padding:'9px 14px', background:'#f2ede4', border:'1px solid #e0d8c8', borderRadius:'8px', color:'#2c2620', fontSize:'13px', outline:'none', boxSizing:'border-box', marginBottom:'16px' }} />
             {/* 입력폼 */}
             {showMemoForm && <div style={{ background:'#f2ede4', borderRadius:'12px', padding:'16px', border:'1px solid #c4a882', marginBottom:'24px' }}>
               {editingMemoId && (
@@ -617,6 +725,11 @@ export default function Home() {
             <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
               {memos.length===0 && <p style={{ color:'#7a6e5e' }}>미팅 기록을 추가해보세요</p>}
               {[...memos]
+                .filter(m => {
+                  if (!memoSearch.trim()) return true;
+                  const q = memoSearch.toLowerCase();
+                  return (m.미팅명||'').toLowerCase().includes(q) || (m.참석자||'').toLowerCase().includes(q) || (m.내용||'').toLowerCase().includes(q) || (m.액션아이템||'').toLowerCase().includes(q);
+                })
                 .sort((a,b) => {
                   const aDone = a.상태==='완료', bDone = b.상태==='완료';
                   if (aDone && !bDone) return 1;
