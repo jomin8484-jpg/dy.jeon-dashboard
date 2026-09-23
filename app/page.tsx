@@ -461,7 +461,7 @@ export default function Home() {
                   const isSelected=selectedProjId===proj.ID;
                   return (
                     <div key={proj.ID}
-                      onClick={()=>setSelectedProjId(proj.ID)}
+                      onClick={()=>{ setSelectedProjId(proj.ID); setEditingProj(false); }}
                       style={{ background:isSelected?'#e8e0d0':'#f2ede4', borderRadius:'10px', padding:'12px 14px', cursor:'pointer', border:`2px solid ${isSelected?'#c4a882':color+'40'}`, transition:'border-color 0.15s', opacity:proj.상태==='완료'?0.5:1 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'4px' }}>
 
