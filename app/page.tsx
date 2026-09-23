@@ -53,6 +53,9 @@ export default function Home() {
   const [memoForm, setMemoForm] = useState({ 미팅명:'', 날짜:'', 참석자:'', 내용:'', 액션아이템:'' });
   const [editingMemoId, setEditingMemoId] = useState<string|null>(null);
   const [inlineMemoForm, setInlineMemoForm] = useState({ 미팅명:'', 날짜:'', 참석자:'', 내용:'', 액션아이템:'' });
+  const [showBoardForm, setShowBoardForm] = useState(false);
+  const [showMemoForm, setShowMemoForm] = useState(false);
+  const [boardForm, setBoardForm] = useState({ 제목:'', 설명:'', 상태:'진행중', 시작일:'', 목표일:'', 메모:'' });
 
   useEffect(() => { if (sessionStorage.getItem('pd_auth')==='true') setAuth(true); }, []);
 
@@ -383,8 +386,8 @@ export default function Home() {
           <>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'24px' }}>
               <h2 style={{ fontSize:'18px', fontWeight:700, margin:0 }}>📋 업무보드</h2>
-              <button onClick={()=>{ setEditItem(null); setForm({제목:'',설명:'',유형:'업무',상태:'진행중',시작일:'',목표일:'',메모:''}); setShowModal(true); }}
-                style={{ padding:'8px 16px', background:'#c4a882', border:'none', borderRadius:'8px', color:'#fff', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>+ 업무 추가</button>
+              <button onClick={()=>{ setShowBoardForm(v=>!v); setBoardForm({제목:'',설명:'',상태:'진행중',시작일:'',목표일:'',메모:''}); }}
+                style={{ padding:'8px 16px', background:'#c4a882', border:'none', borderRadius:'8px', color:'#fff', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>{showBoardForm ? '✕ 닫기' : '+ 업무 추가'}</button>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:selectedProj?'280px 1fr':'1fr', gap:'16px' }}>
               {/* 왼쪽 업무 목록 */}
@@ -530,9 +533,13 @@ export default function Home() {
         {/* ── 미팅 탭 ── */}
         {tab==='memo' && (
           <>
-            <h2 style={{ fontSize:'18px', fontWeight:700, margin:'0 0 24px' }}>📅 미팅</h2>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px' }}>
+              <h2 style={{ fontSize:'18px', fontWeight:700, margin:0 }}>📅 미팅</h2>
+              <button onClick={()=>{ setShowMemoForm(v=>!v); setMemoForm({미팅명:'',날짜:'',참석자:'',내용:'',액션아이템:''}); setEditingMemoId(null); }}
+                style={{ padding:'8px 16px', background:'#c4a882', border:'none', borderRadius:'8px', color:'#fff', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>{showMemoForm?'✕ 닫기':'+ 미팅 추가'}</button>
+            </div>
             {/* 입력폼 */}
-            <div style={{ background:'#f2ede4', borderRadius:'12px', padding:'16px', border:`1px solid ${editingMemoId?'#c4a882':'#e0d8c8'}`, marginBottom:'24px' }}>
+            {showMemoForm && <div style={{ background:'#f2ede4', borderRadius:'12px', padding:'16px', border:'1px solid #c4a882', marginBottom:'24px' }}>
               {editingMemoId && (
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px' }}>
                   <span style={{ fontSize:'12px', fontWeight:600, color:'#c4a882' }}>✏️ 수정 중</span>
@@ -565,11 +572,12 @@ export default function Home() {
                   }
                   setMemoForm({미팅명:'',날짜:'',참석자:'',내용:'',액션아이템:''});
                   setSelectedMemo(null);
+                  setShowMemoForm(false);
                   const res=await fetch('/api/memo').then(r=>r.json());
                   setMemos(Array.isArray(res)?res.filter((x:Memo)=>x.ID):[]);
-                }} style={{ padding:'8px 20px', background:'#c4a882', border:'none', borderRadius:'8px', color:'#fff', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>{editingMemoId?'수정 완료':'저장'}</button>
+                }} style={{ padding:'8px 20px', background:'#c4a882', border:'none', borderRadius:'8px', color:'#fff', fontSize:'13px', fontWeight:600, cursor:'pointer' }}>저장</button>
               </div>
-            </div>
+            </div>}
 
             {/* 미팅 목록 */}
             <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
@@ -685,7 +693,7 @@ export default function Home() {
           </>
         )}
 
-        {/* ── 모달 (업무 추가/수정) ── */}
+        {/* ── 모달 (업무 수정용) ── */}
         {showModal && (
           <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.3)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:100 }}>
             <div style={{ background:'#f2ede4', borderRadius:'16px', padding:'28px', width:'440px', maxWidth:'90vw', border:'1px solid #e0d8c8' }}>
