@@ -52,6 +52,7 @@ export default function Home() {
   const [form, setForm] = useState<any>({});
   const [memoForm, setMemoForm] = useState({ 미팅명:'', 날짜:'', 참석자:'', 내용:'', 액션아이템:'' });
   const [editingMemoId, setEditingMemoId] = useState<string|null>(null);
+  const [inlineMemoForm, setInlineMemoForm] = useState({ 미팅명:'', 날짜:'', 참석자:'', 내용:'', 액션아이템:'' });
 
   useEffect(() => { if (sessionStorage.getItem('pd_auth')==='true') setAuth(true); }, []);
 
@@ -573,7 +574,14 @@ export default function Home() {
             {/* 미팅 목록 */}
             <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
               {memos.length===0 && <p style={{ color:'#7a6e5e' }}>미팅 기록을 추가해보세요</p>}
-              {memos.map(memo=>(
+              {[...memos]
+                .sort((a,b) => {
+                  const aDone = a.상태==='완료', bDone = b.상태==='완료';
+                  if (aDone && !bDone) return 1;
+                  if (!aDone && bDone) return -1;
+                  return (b.날짜||b.수정일||'').localeCompare(a.날짜||a.수정일||'');
+                })
+                .map(memo=>(
                 <div key={memo.ID} style={{ background:'#f2ede4', borderRadius:'12px', border:`1px solid ${selectedMemo?.ID===memo.ID?'#c4a882':'#e0d8c8'}`, overflow:'hidden' }}>
                   <div onClick={()=>setSelectedMemo(selectedMemo?.ID===memo.ID?null:memo)}
                     style={{ padding:'14px 16px', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', opacity:memo.상태==='완료'?0.5:1 }}>
@@ -592,19 +600,49 @@ export default function Home() {
                   </div>
                   {selectedMemo?.ID===memo.ID && (
                     <div style={{ padding:'0 16px 16px', borderTop:'1px solid #e0d8c8' }}>
-                      {memo.내용 && (
-                        <div style={{ marginTop:'12px' }}>
-                          <p style={{ fontSize:'11px', fontWeight:600, color:'#9a8e7e', margin:'0 0 6px' }}>📝 내용</p>
-                          <p style={{ fontSize:'13px', color:'#5a4e3e', lineHeight:'1.8', whiteSpace:'pre-wrap', margin:0 }}>{memo.내용}</p>
+                      {editingMemoId===memo.ID ? (
+                        // 인라인 수정 폼
+                        <div style={{ marginTop:'12px', display:'flex', flexDirection:'column', gap:'8px' }}>
+                          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
+                            <input placeholder="미팅명" value={inlineMemoForm.미팅명} onChange={e=>setInlineMemoForm({...inlineMemoForm,미팅명:e.target.value})}
+                              style={{ padding:'7px 10px', background:'#faf8f4', border:'1px solid #c4a882', borderRadius:'7px', color:'#2c2620', fontSize:'13px', outline:'none' }} />
+                            <input type="date" value={inlineMemoForm.날짜} onChange={e=>setInlineMemoForm({...inlineMemoForm,날짜:e.target.value})}
+                              style={{ padding:'7px 10px', background:'#faf8f4', border:'1px solid #c4a882', borderRadius:'7px', color:'#2c2620', fontSize:'13px', outline:'none', colorScheme:'light' }} />
+                          </div>
+                          <input placeholder="참석자" value={inlineMemoForm.참석자} onChange={e=>setInlineMemoForm({...inlineMemoForm,참석자:e.target.value})}
+                            style={{ padding:'7px 10px', background:'#faf8f4', border:'1px solid #c4a882', borderRadius:'7px', color:'#2c2620', fontSize:'13px', outline:'none', width:'100%', boxSizing:'border-box' }} />
+                          <textarea placeholder="미팅 내용" value={inlineMemoForm.내용} onChange={e=>setInlineMemoForm({...inlineMemoForm,내용:e.target.value})}
+                            style={{ padding:'7px 10px', background:'#faf8f4', border:'1px solid #c4a882', borderRadius:'7px', color:'#2c2620', fontSize:'13px', outline:'none', width:'100%', boxSizing:'border-box', height:'80px', resize:'vertical', lineHeight:'1.6' }} />
+                          <textarea placeholder="액션아이템" value={inlineMemoForm.액션아이템} onChange={e=>setInlineMemoForm({...inlineMemoForm,액션아이템:e.target.value})}
+                            style={{ padding:'7px 10px', background:'#faf8f4', border:'1px solid #c4a882', borderRadius:'7px', color:'#2c2620', fontSize:'13px', outline:'none', width:'100%', boxSizing:'border-box', height:'60px', resize:'vertical', lineHeight:'1.6' }} />
+                          <div style={{ display:'flex', gap:'8px', justifyContent:'flex-end' }}>
+                            <button onClick={()=>setEditingMemoId(null)} style={{ padding:'6px 12px', background:'#e0d8c8', border:'none', borderRadius:'6px', color:'#7a6e5e', fontSize:'12px', cursor:'pointer' }}>취소</button>
+                            <button onClick={async()=>{
+                              const now=new Date().toISOString().slice(0,10);
+                              await fetch('/api/memo',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...memo,...inlineMemoForm,수정일:now})});
+                              setEditingMemoId(null);
+                              const res=await fetch('/api/memo').then(r=>r.json());
+                              setMemos(Array.isArray(res)?res.filter((x:Memo)=>x.ID):[]);
+                            }} style={{ padding:'6px 14px', background:'#c4a882', border:'none', borderRadius:'6px', color:'#fff', fontSize:'12px', fontWeight:600, cursor:'pointer' }}>저장</button>
+                          </div>
                         </div>
+                      ) : (
+                        <>
+                          {memo.내용 && (
+                            <div style={{ marginTop:'12px' }}>
+                              <p style={{ fontSize:'11px', fontWeight:600, color:'#9a8e7e', margin:'0 0 6px' }}>📝 내용</p>
+                              <p style={{ fontSize:'13px', color:'#5a4e3e', lineHeight:'1.8', whiteSpace:'pre-wrap', margin:0 }}>{memo.내용}</p>
+                            </div>
+                          )}
+                          {memo.액션아이템 && (
+                            <div style={{ marginTop:'12px', padding:'12px', background:'#faf8f4', borderRadius:'8px', border:'1px solid #e0d8c8' }}>
+                              <p style={{ fontSize:'11px', fontWeight:600, color:'#9a8e7e', margin:'0 0 6px' }}>✅ 액션아이템</p>
+                              <p style={{ fontSize:'13px', color:'#5a4e3e', lineHeight:'1.8', whiteSpace:'pre-wrap', margin:0 }}>{memo.액션아이템}</p>
+                            </div>
+                          )}
+                        </>
                       )}
-                      {memo.액션아이템 && (
-                        <div style={{ marginTop:'12px', padding:'12px', background:'#faf8f4', borderRadius:'8px', border:'1px solid #e0d8c8' }}>
-                          <p style={{ fontSize:'11px', fontWeight:600, color:'#9a8e7e', margin:'0 0 6px' }}>✅ 액션아이템</p>
-                          <p style={{ fontSize:'13px', color:'#5a4e3e', lineHeight:'1.8', whiteSpace:'pre-wrap', margin:0 }}>{memo.액션아이템}</p>
-                        </div>
-                      )}
-                      <div style={{ display:'flex', gap:'8px', marginTop:'14px', justifyContent:'flex-end' }}>
+                      {editingMemoId!==memo.ID && <div style={{ display:'flex', gap:'8px', marginTop:'14px', justifyContent:'flex-end' }}>
                         <button onClick={async()=>{
                             if (!memo.액션아이템.trim()) { alert('액션아이템을 먼저 입력해주세요.'); return; }
                             const lines=memo.액션아이템.split('\n').filter((l:string)=>l.trim());
@@ -634,11 +672,11 @@ export default function Home() {
                             setMemos(Array.isArray(res)?res.filter((x:Memo)=>x.ID):[]);
                             setSelectedMemo(null);
                           }} style={{ padding:'6px 12px', background:'#d4edda', border:'none', borderRadius:'6px', color:'#2e5e2e', fontSize:'12px', cursor:'pointer', display:memo.상태==='완료'?'none':'block' }}>✅ 완료</button>
-                        <button onClick={()=>{ setMemoForm({미팅명:memo.미팅명,날짜:memo.날짜,참석자:memo.참석자,내용:memo.내용,액션아이템:memo.액션아이템}); setEditingMemoId(memo.ID); window.scrollTo({top:0,behavior:'smooth'}); }}
+                        <button onClick={e=>{ e.stopPropagation(); setInlineMemoForm({미팅명:memo.미팅명,날짜:memo.날짜,참석자:memo.참석자,내용:memo.내용,액션아이템:memo.액션아이템}); setEditingMemoId(memo.ID); setSelectedMemo(memo); }}
                           style={{ padding:'6px 12px', background:'#e0d8c8', border:'none', borderRadius:'6px', color:'#2c2620', fontSize:'12px', cursor:'pointer' }}>수정</button>
                         <button onClick={()=>handleDelete(memo)}
                           style={{ padding:'6px 12px', background:'#fde8e8', border:'none', borderRadius:'6px', color:'#c0392b', fontSize:'12px', cursor:'pointer' }}>삭제</button>
-                      </div>
+                      </div>}
                     </div>
                   )}
                 </div>
