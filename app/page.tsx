@@ -275,8 +275,8 @@ export default function Home() {
       <div style={{ flex:1, padding:'clamp(20px, 4vw, 48px) clamp(16px, 4vw, 40px)', overflowY:'auto', minWidth:0 }}>
         {loading && <p style={{ color:'#7a6e5e', textAlign:'center' }}>불러오는 중...</p>}
 
-        {/* ── 종료 임박 알림 배너 ── */}
-        {(() => {
+        {/* ── 종료 임박 알림 배너 (홈 탭 제외) ── */}
+        {tab !== 'home' && (() => {
           const today = new Date();
           today.setHours(0,0,0,0);
           const urgent = projects.filter(p => {
